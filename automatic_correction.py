@@ -380,143 +380,115 @@ def create_simpson():  # Write simpson input files
 
 
 def simulate_sequence():  # Start simulation with set parameter
-    #######################################################################
-        # Calculate Phasecorrection for given pulselength from simulation
-        ###############################################################################
-        run(['simpson',
-                'phasecorrection_liquid.tcl',
-                tw1,
-                tw2,
-                tw3,
-                'double_echo',
-                delta,
-                N,
-                rffactor1,
-                rffactor2,
-                rffactor3,
-                tau1,
-                tau2,
-                tau3,
-                'none',
-                ss_offset])
+    global delta
+    global tw1
+    global tw2
+    global tw3
+    global rffactor1
+    global rffactor2
+    global rffactor3
+    global tau1
+    global tau2
+    global tau3
+    global N
+    global ss_offset
+    global rms_limit
+    global poly_order
+    global start
+    global end
+    global outer_weight
+    global rmssteps
 
-        filename_phasecorr = ('phasecorrection_liquid_' +
-                            'rffactor_' + rffactor1 + '_' + rffactor2 + '_' + rffactor3 +
-                            '_tw_' + tw1 + '_' + tw2 + '_' + tw3 +
-                            '_delays_' + tau1 + '_' + tau2 + '_' + tau3 +
-                            '_delta_' + delta +
-                            '_N_' + N +
-                            '.out')
+    run(['simpson',
+            'phasecorrection_liquid.tcl',
+            tw1,
+            tw2,
+            tw3,
+            'double_echo',
+            delta,
+            N,
+            rffactor1,
+            rffactor2,
+            rffactor3,
+            tau1,
+            tau2,
+            tau3,
+            'none',
+            ss_offset])
 
-        fig = plt.figure(figsize=(6.5, 6))
-        ax1 = plt.subplot2grid((2, 1), (0, 0))
-        ax2 = plt.subplot2grid((2, 1), (1, 0))
-        fig.tight_layout()
+    filename_phasecorr = ('phasecorrection_liquid_' +
+                        'rffactor_' + rffactor1 + '_' + rffactor2 + '_' + rffactor3 +
+                        '_tw_' + tw1 + '_' + tw2 + '_' + tw3 +
+                        '_delays_' + tau1 + '_' + tau2 + '_' + tau3 +
+                        '_delta_' + delta +
+                        '_N_' + N +
+                        '.out')
 
-        dat_phasecorr = np.genfromtxt(filename_phasecorr, delimiter=' ')
+    fig = plt.figure(figsize=(6.5, 6))
+    ax1 = plt.subplot2grid((2, 1), (0, 0))
+    ax2 = plt.subplot2grid((2, 1), (1, 0))
+    fig.tight_layout()
 
-        phase = np.zeros((len(dat_phasecorr), 2))
-        for i in range(len(dat_phasecorr)):
-            phase[i, 0] = dat_phasecorr[i, 0]
-            phase[i, 1] = np.angle(complex(dat_phasecorr[i, 1], dat_phasecorr[i, 2]))
-        phase[:,1] = np.rad2deg(np.unwrap(phase[:,1]))
+    dat_phasecorr = np.genfromtxt(filename_phasecorr, delimiter=' ')
 
-        ###############################################################################
-        # Interpolation
-        ###############################################################################
-        weight = []
-        for i in range(len(phase[:, 0])):
-            if(i < len(phase[:, 0])*start):
-                weight.append(outer_weight)
-            elif(i > len(phase[:, 0])*end):
-                weight.append(outer_weight)
-            else:
-                weight.append(1.0)
+    phase = np.zeros((len(dat_phasecorr), 2))
+    for i in range(len(dat_phasecorr)):
+        phase[i, 0] = dat_phasecorr[i, 0]
+        phase[i, 1] = np.angle(complex(dat_phasecorr[i, 1], dat_phasecorr[i, 2]))
+    phase[:,1] = np.rad2deg(np.unwrap(phase[:,1]))
 
-        coefs = poly.polyfit(phase[:, 0], phase[:, 1], poly_order, w=weight)
-        ffit = poly.Polynomial(coefs)
+    ###############################################################################
+    # Interpolation
+    ###############################################################################
+    weight = []
+    for i in range(len(phase[:, 0])):
+        if(i < len(phase[:, 0])*start):
+            weight.append(outer_weight)
+        elif(i > len(phase[:, 0])*end):
+            weight.append(outer_weight)
+        else:
+            weight.append(1.0)
 
-        np_tw = round(float(tw1)/0.05)
-        pulselength = np.linspace(phase[0, 0], phase[-1, 0], np_tw)
+    coefs = poly.polyfit(phase[:, 0], phase[:, 1], poly_order, w=weight)
+    ffit = poly.Polynomial(coefs)
 
-        phase_interpol = ffit(pulselength)
+    np_tw = round(float(tw1)/0.05)
+    pulselength = np.linspace(phase[0, 0], phase[-1, 0], np_tw)
 
-        phase_interpol2 = []
-        phase_interpol2.append(pulselength)
-        phase_interpol2.append(phase_interpol)
+    phase_interpol = ffit(pulselength)
 
-        weight = []
-        for i in range(len(phase_interpol2[0])):
-            if(i < len(phase_interpol2[0])*start):
-                weight.append(outer_weight)
-            elif(i > len(phase_interpol2[0])*end):
-                weight.append(outer_weight)
-            else:
-                weight.append(1.0)
+    phase_interpol2 = []
+    phase_interpol2.append(pulselength)
+    phase_interpol2.append(phase_interpol)
 
-        phase_interpol2[1]=phase_interpol2[1]*weight
+    weight = []
+    for i in range(len(phase_interpol2[0])):
+        if(i < len(phase_interpol2[0])*start):
+            weight.append(outer_weight)
+        elif(i > len(phase_interpol2[0])*end):
+            weight.append(outer_weight)
+        else:
+            weight.append(1.0)
 
-        interpol_org = interpolate.interp1d(phase[:, 0], phase[:, 1])
-        interpol_org = interpol_org(phase_interpol2[0])
+    phase_interpol2[1]=phase_interpol2[1]*weight
 
-        rms_start = 0.0
-        for i in range(len(phase_interpol2[0])):
-            if(i < len(phase_interpol2[0])*start):
-                rms_start = rms_start + 0.0
-            elif(i > len(phase_interpol2[0])*end):
-                rms_start = rms_start + 0.0
-            else:
-                rms_start = rms_start + abs(phase_interpol2[1][i] - interpol_org[i])
-        rms = rms_start
+    interpol_org = interpolate.interp1d(phase[:, 0], phase[:, 1])
+    interpol_org = interpol_org(phase_interpol2[0])
 
-        while abs(rms_start-rms) < rms_limit:
-            rms_start = rms
-            start = start - rmssteps
-            end = end + rmssteps
-            weight = []
-            for i in range(len(phase[:, 0])):
-                if(i < len(phase[:, 0])*start):
-                    weight.append(outer_weight)
-                elif(i > len(phase[:, 0])*end):
-                    weight.append(outer_weight)
-                else:
-                    weight.append(1.0)
+    rms_start = 0.0
+    for i in range(len(phase_interpol2[0])):
+        if(i < len(phase_interpol2[0])*start):
+            rms_start = rms_start + 0.0
+        elif(i > len(phase_interpol2[0])*end):
+            rms_start = rms_start + 0.0
+        else:
+            rms_start = rms_start + abs(phase_interpol2[1][i] - interpol_org[i])
+    rms = rms_start
 
-            coefs = poly.polyfit(phase[:, 0], phase[:, 1], poly_order, w=weight)
-            ffit = poly.Polynomial(coefs)
-
-            pulselength = np.linspace(phase[0, 0], phase[-1, 0], np_tw)
-
-            phase_interpol = ffit(pulselength)
-
-            phase_interpol2 = []
-            phase_interpol2.append(pulselength)
-            phase_interpol2.append(phase_interpol)
-
-            weight = []
-            for i in range(len(phase_interpol2[0])):
-                if(i < len(phase_interpol2[0])*start):
-                    weight.append(outer_weight)
-                elif(i > len(phase_interpol2[0])*end):
-                    weight.append(outer_weight)
-                else:
-                    weight.append(1.0)
-
-            phase_interpol2[1]=phase_interpol2[1]*weight
-
-            rms = 0.0
-            for i in range(len(phase_interpol2[0])):
-                if(i < len(phase_interpol2[0])*start):
-                    rms = rms + 0.0
-                elif(i > len(phase_interpol2[0])*end):
-                    rms = rms + 0.0
-                else:
-                    rms = rms + abs(phase_interpol2[1][i] - interpol_org[i])
-            if (start < 0.0-rmssteps):
-                break
-
-        start = start + rmssteps
-        end = end - rmssteps
+    while abs(rms_start-rms) < rms_limit:
+        rms_start = rms
+        start = start - rmssteps
+        end = end + rmssteps
         weight = []
         for i in range(len(phase[:, 0])):
             if(i < len(phase[:, 0])*start):
@@ -556,56 +528,100 @@ def simulate_sequence():  # Start simulation with set parameter
                 rms = rms + 0.0
             else:
                 rms = rms + abs(phase_interpol2[1][i] - interpol_org[i])
+        if (start < 0.0-rmssteps):
+            break
 
-        ###############################################################################
-        # Plotting
-        ###############################################################################
-        np.savetxt(filename_phasecorr.replace('.out', '.phasecorr'), phase_interpol2[1], delimiter=' ')
+    start = start + rmssteps
+    end = end - rmssteps
+    weight = []
+    for i in range(len(phase[:, 0])):
+        if(i < len(phase[:, 0])*start):
+            weight.append(outer_weight)
+        elif(i > len(phase[:, 0])*end):
+            weight.append(outer_weight)
+        else:
+            weight.append(1.0)
 
-        ax1.plot(dat_phasecorr[:, 0]/1000, dat_phasecorr[:, 1], label=r'Real')
-        ax1.plot(dat_phasecorr[:, 0]/1000, dat_phasecorr[:, 2], label=r'Imag')
-        ax1.plot(dat_phasecorr[:, 0]/1000, np.sqrt(dat_phasecorr[:, 1] ** 2 + dat_phasecorr[:, 2] ** 2), label=r'Magnitude')
-        ax1.legend(fontsize=6)
-        ax1.invert_xaxis()
-        ax1.set_ylabel('Magnetization / a.u.')
-        ax2.plot(phase[:, 0]/1000, phase[:, 1], ls='-', c='k', label='Phase')
-        ax2.plot(phase_interpol2[0][:]/1000, phase_interpol2[1][:], ".", ms=0.5, c='r', label='Interpolation')
-        ax2.legend(fontsize=6)
-        ax2.invert_xaxis()
-        ax2.set_xlabel('Frequency Offset / kHz')
-        ax2.set_ylabel('Phase / degree')
-        plt.tight_layout()
-        plt.savefig(filename_phasecorr.replace('.out', '_phase.png'))
+    coefs = poly.polyfit(phase[:, 0], phase[:, 1], poly_order, w=weight)
+    ffit = poly.Polynomial(coefs)
 
-        ##############################################################################
-        # Create corrected Shape Files
-        ##############################################################################
-        run(['simpson',
-            'phasecorrection_liquid.tcl',
-            tw1,
-            tw2,
-            tw3,
-            'create_shapes',
-            delta,
-            N,
-            rffactor1,
-            rffactor2,
-            rffactor3,
-            tau1,
-            tau2,
-            tau3,
-            filename_phasecorr.replace('.out', '.phasecorr'),
-            ss_offset])
+    pulselength = np.linspace(phase[0, 0], phase[-1, 0], np_tw)
 
-        run(['rm', '-f', 'phasecorrected.spinsys'])
-        run(['rm', '-f', 'offset.spinsys'])
-        run(['rm', '-f', 'phasecorrection_liquid.tcl'])
-        run(['rm', '-f', filename_phasecorr])
-        run(['rm', '-f', filename_phasecorr.replace('phasecorrection_liquid', 'phasecorrection_liquid_create_shapes')])
+    phase_interpol = ffit(pulselength)
 
-        sg.popup('Simulation finished! Close to show Plot!')
+    phase_interpol2 = []
+    phase_interpol2.append(pulselength)
+    phase_interpol2.append(phase_interpol)
 
-        plt.show()
+    weight = []
+    for i in range(len(phase_interpol2[0])):
+        if(i < len(phase_interpol2[0])*start):
+            weight.append(outer_weight)
+        elif(i > len(phase_interpol2[0])*end):
+            weight.append(outer_weight)
+        else:
+            weight.append(1.0)
+
+    phase_interpol2[1]=phase_interpol2[1]*weight
+
+    rms = 0.0
+    for i in range(len(phase_interpol2[0])):
+        if(i < len(phase_interpol2[0])*start):
+            rms = rms + 0.0
+        elif(i > len(phase_interpol2[0])*end):
+            rms = rms + 0.0
+        else:
+            rms = rms + abs(phase_interpol2[1][i] - interpol_org[i])
+
+    ###############################################################################
+    # Plotting
+    ###############################################################################
+    np.savetxt(filename_phasecorr.replace('.out', '.phasecorr'), phase_interpol2[1], delimiter=' ')
+
+    ax1.plot(dat_phasecorr[:, 0]/1000, dat_phasecorr[:, 1], label=r'Real')
+    ax1.plot(dat_phasecorr[:, 0]/1000, dat_phasecorr[:, 2], label=r'Imag')
+    ax1.plot(dat_phasecorr[:, 0]/1000, np.sqrt(dat_phasecorr[:, 1] ** 2 + dat_phasecorr[:, 2] ** 2), label=r'Magnitude')
+    ax1.legend(fontsize=6)
+    ax1.invert_xaxis()
+    ax1.set_ylabel('Magnetization / a.u.')
+    ax2.plot(phase[:, 0]/1000, phase[:, 1], ls='-', c='k', label='Phase')
+    ax2.plot(phase_interpol2[0][:]/1000, phase_interpol2[1][:], ".", ms=0.5, c='r', label='Interpolation')
+    ax2.legend(fontsize=6)
+    ax2.invert_xaxis()
+    ax2.set_xlabel('Frequency Offset / kHz')
+    ax2.set_ylabel('Phase / degree')
+    plt.tight_layout()
+    plt.savefig(filename_phasecorr.replace('.out', '_phase.png'))
+
+    ##############################################################################
+    # Create corrected Shape Files
+    ##############################################################################
+    run(['simpson',
+        'phasecorrection_liquid.tcl',
+        tw1,
+        tw2,
+        tw3,
+        'create_shapes',
+        delta,
+        N,
+        rffactor1,
+        rffactor2,
+        rffactor3,
+        tau1,
+        tau2,
+        tau3,
+        filename_phasecorr.replace('.out', '.phasecorr'),
+        ss_offset])
+
+    run(['rm', '-f', 'phasecorrected.spinsys'])
+    run(['rm', '-f', 'offset.spinsys'])
+    run(['rm', '-f', 'phasecorrection_liquid.tcl'])
+    run(['rm', '-f', filename_phasecorr])
+    run(['rm', '-f', filename_phasecorr.replace('phasecorrection_liquid', 'phasecorrection_liquid_create_shapes')])
+
+    sg.popup('Simulation finished! Close to show Plot!')
+
+    plt.show()
 
 
 def sequence_diagram():  # Generate base64 image of pulsesequence
@@ -650,6 +666,7 @@ def exp_layout(exp_type):  #Generate a WCHORUS Layout
                 [sg.Input(key='delta')],
                 [sg.Button('Start Simulation'), sg.Button('Exit')]
                 ]
+        
     elif(exp_type=='Double_Echo'):
         chorus_sequence = sequence_diagram()
 
@@ -690,14 +707,73 @@ def exp_layout(exp_type):  #Generate a WCHORUS Layout
 
 
 def selection_layout():  # Generates a selection Layout
-    layout = [[sg.Text('Define Pulse Parameter here, then click start Simulation')],
-              [sg.Listbox(values=('WCHORUS', 'Double_Echo'), size=(20, 12), key='exp_type', enable_events=True)],
+    layout = [[sg.Text('Select Pulse Sequence')],
+              [sg.Listbox(values=('WCHORUS', 'TEST', 'TEST2', 'TEST3'), size=(20, 12), key='exp_type', enable_events=True)],
               [sg.Button('Exit')]]
     return(layout)
 
 
+def read_parameter(exp_type):  # Update the "output" text element to be the value of "input" element and set input to parameter
+    global simulation_window
+    if(exp_type=='WCHORUS'):  # define WCHORUS parameter
+        global delta
+        global tw1
+        global tw2
+        global tw3
+        global rffactor1
+        global rffactor2
+        global rffactor3
+        global tau3
+        global N
+
+        simulation_window['delta_out'].update(simulation_values['delta'])
+        simulation_window['tw1_out'].update(simulation_values['tw1'])
+        simulation_window['tw2_out'].update(simulation_values['tw2'])
+        simulation_window['tw3_out'].update(simulation_values['tw3'])
+        simulation_window['rffactor1_out'].update(simulation_values['rffactor1'])
+        simulation_window['rffactor2_out'].update(simulation_values['rffactor2'])
+        simulation_window['rffactor3_out'].update(simulation_values['rffactor3'])
+        simulation_window['tau3_out'].update(simulation_values['tau3'])
+        simulation_window['N1_out'].update(simulation_values['N1'])
+        simulation_window['N2_out'].update(simulation_values['N2'])
+        simulation_window['N3_out'].update(simulation_values['N3'])
+        # window['ss_offset_out'].update(values['ss_offset'])
+        # window['rms_limit_out'].update(values['rms_limit'])
+
+        delta       = simulation_values['delta']
+        tw1         = simulation_values['tw1']
+        tw2         = simulation_values['tw2']
+        tw3         = simulation_values['tw3']
+        rffactor1   = simulation_values['rffactor1']
+        rffactor2   = simulation_values['rffactor2']
+        rffactor3   = simulation_values['rffactor3']
+        tau3        = simulation_values['tau3']
+        N           = simulation_values['N1']
+
+# Declare Parameter
+delta        = '0'
+tw1          = '0'
+tw2          = '0'
+tw3          = '0'
+rffactor1    = '0'
+rffactor2    = '0'
+rffactor3    = '0'
+tau1         = '0'
+tau2         = '0'
+tau3         = '0'
+N            = '0'
+ss_offset    = '50000'
+rms_limit    = 500
+poly_order   = 42
+start        = 0.2
+end          = 0.8
+outer_weight = 0.0
+rmssteps     = 0.01
+
+
+
 # Create Sequence Selection Window
-sequence_selection = sg.Window('Pulsesequence Phasecorrection Tool', selection_layout(), grab_anywhere=True)
+sequence_selection = sg.Window('Phasecorrection Tool', selection_layout(), grab_anywhere=True)
 
 # STEP3 - the event loop
 while True:
@@ -705,58 +781,17 @@ while True:
     print(event, values)
     if event == sg.WIN_CLOSED or event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
         break
-    simulation_window = sg.Window('New Window Test', exp_layout(values['exp_type'][0]), grab_anywhere=True)
+    simulation_window = sg.Window('Simulation Parameter', exp_layout(values['exp_type'][0]), grab_anywhere=True)
     while True:
-        event, values = simulation_window.read()   # Read the event that happened and the values dictionary
-        print(event, values)
-        if event == sg.WIN_CLOSED or event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
+        simulation_event, simulation_values = simulation_window.read()   # Read the event that happened and the values dictionary
+        print(simulation_event, simulation_values)
+        if simulation_event == sg.WIN_CLOSED or simulation_event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
             break
-        if event == 'Start Simulation':
-            # ADD SIMULATION PARAMETER SETUP HERE
-            break
-            # ADD SIMULATION HERE
+        if simulation_event == 'Start Simulation':
+            read_parameter(values['exp_type'][0])
+            create_simpson()
+            simulate_sequence()
     simulation_window.close()
-        # # Update the "output" text element to be the value of "input" element
-        # window['delta_out'].update(values['delta'])
-        # window['tw1_out'].update(values['tw1'])
-        # window['tw2_out'].update(values['tw2'])
-        # window['tw3_out'].update(values['tw3'])
-        # window['rffactor1_out'].update(values['rffactor1'])
-        # window['rffactor2_out'].update(values['rffactor2'])
-        # window['rffactor3_out'].update(values['rffactor3'])
-        # window['tau3_out'].update(values['tau3'])
-        # window['N1_out'].update(values['N1'])
-        # window['N2_out'].update(values['N2'])
-        # window['N3_out'].update(values['N3'])
-        # # window['ss_offset_out'].update(values['ss_offset'])
-        # # window['rms_limit_out'].update(values['rms_limit'])
-
-        # delta       = values['delta']
-        # tw1         = values['tw1']
-        # tw2         = values['tw2']
-        # tw3         = values['tw3']
-        # rffactor1   = values['rffactor1']
-        # rffactor2   = values['rffactor2']
-        # rffactor3   = values['rffactor3']
-        # tau1        = '0'
-        # tau2        = '0'
-        # tau3        = values['tau3']
-        # N           = values['N1']
-
-        # # ss_offset   = values['ss_offset']
-        # # rms_limit   = int(values['rms_limit'])
-        # ss_offset   = '50000'
-        # rms_limit   = 500
-        # poly_order = 42
-        # start = 0.2
-        # end = 0.8
-        # outer_weight = 0.0
-        # rmssteps = 0.01
-        
-        # create_simpson()
-        # simulate_sequence()
-
-        ########
 
 
 sequence_selection.close()
