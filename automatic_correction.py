@@ -84,7 +84,7 @@ def create_simpson():  # Write simpson input files
             global par rfsh1 rfsh2 rfsh3 argc argv
 
             # Read Arguments from commandline
-            if { $argc != 15 } {
+            if { $argc != 17 } {
                 puts "Wrong number of Inputs"
                 puts "Please try again."
             } else {
@@ -93,15 +93,17 @@ def create_simpson():  # Write simpson input files
                 set par(tw3)                        [lindex $argv 3]
                 set par(type)                       [lindex $argv 4]
                 set par(Delta)                      [lindex $argv 5]
-                set par(N)                          [lindex $argv 6]
-                set par(rf_factor1)                 [lindex $argv 7]
-                set par(rf_factor2)                 [lindex $argv 8]
-                set par(rf_factor3)                 [lindex $argv 9]
-                set par(tau1)                       [lindex $argv 10]
-                set par(tau2)                       [lindex $argv 11]
-                set par(tau3)                       [lindex $argv 12]
-                set par(filename_phasecorrect)      [lindex $argv 13]
-                set par(ss_offset)                  [lindex $argv 14]
+                set par(N1)                         [lindex $argv 6]
+                set par(N2)                         [lindex $argv 7]
+                set par(N3)                         [lindex $argv 8]
+                set par(rf_factor1)                 [lindex $argv 9]
+                set par(rf_factor2)                 [lindex $argv 10]
+                set par(rf_factor3)                 [lindex $argv 11]
+                set par(tau1)                       [lindex $argv 12]
+                set par(tau2)                       [lindex $argv 13]
+                set par(tau3)                       [lindex $argv 14]
+                set par(filename_phasecorrect)      [lindex $argv 15]
+                set par(ss_offset)                  [lindex $argv 16]
             }
 
             set par(stepsize)   0.05
@@ -139,50 +141,50 @@ def create_simpson():  # Write simpson input files
                 # Set first WURST pulse (excitation)
                 set par(sweep_rate1) [expr ($par(Delta)*1e3)/($par(tw1)*1e-6)]
                 set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-                set rfsh1 [list2shape [wurst $par(N) $par(tw1) $par(Delta) $par(rf1) $par(ph1) $par(stepsize)]]
+                set rfsh1 [list2shape [wurst $par(N1) $par(tw1) $par(Delta) $par(rf1) $par(ph1) $par(stepsize)]]
 
                 # Set second WURST pulse (refocussing)
                 set par(sweep_rate2) [expr ($par(Delta)*1e3)/($par(tw2)*1e-6)]
                 set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-                set rfsh2 [list2shape [wurst $par(N) $par(tw2) $par(Delta) $par(rf2) $par(ph2) $par(stepsize)]]
+                set rfsh2 [list2shape [wurst $par(N2) $par(tw2) $par(Delta) $par(rf2) $par(ph2) $par(stepsize)]]
 
                 # Set third WURST pulse (refocussing)
                 set par(sweep_rate3) [expr ($par(Delta)*1e3)/($par(tw3)*1e-6)]
                 set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
-                set rfsh3 [list2shape [wurst $par(N) $par(tw3) $par(Delta) $par(rf3) $par(ph3) $par(stepsize)]]
+                set rfsh3 [list2shape [wurst $par(N3) $par(tw3) $par(Delta) $par(rf3) $par(ph3) $par(stepsize)]]
 
                 # Set filenames for WURST type experiments
-                set par(filename) $par(name)_rffactor_$par(rf_factor1)_$par(rf_factor2)_$par(rf_factor3)_tw_$par(tw1)_$par(tw2)_$par(tw3)_delays_$par(tau1)_$par(tau2)_$par(tau3)_delta_$par(Delta)_N_$par(N)
+                set par(filename) $par(name)_rffactor_$par(rf_factor1)_$par(rf_factor2)_$par(rf_factor3)_tw_$par(tw1)_$par(tw2)_$par(tw3)_delays_$par(tau1)_$par(tau2)_$par(tau3)_delta_$par(Delta)_N_$par(N1)_$par(N2)_$par(N3)
             } elseif {[string equal $par(type) "create_shapes"]} {
                 # Set first WURST pulse (excitation)
                 set par(sweep_rate1) [expr ($par(Delta)*1e3)/($par(tw1)*1e-6)]
                 set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-                set rfsh1 [list2shape [wurst_phasecorr $par(N) $par(tw1) $par(Delta) $par(rf1) $par(filename_phasecorrect) 0.0]]
+                set rfsh1 [list2shape [wurst_phasecorr $par(N1) $par(tw1) $par(Delta) $par(rf1) $par(filename_phasecorrect) 0.0]]
 
                 # Set second WURST pulse (refocussing)
                 set par(sweep_rate2) [expr ($par(Delta)*1e3)/($par(tw2)*1e-6)]
                 set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-                set rfsh2 [list2shape [wurst $par(N) $par(tw2) $par(Delta) $par(rf2) 0.0]]
+                set rfsh2 [list2shape [wurst $par(N2) $par(tw2) $par(Delta) $par(rf2) 0.0]]
 
                 # Set third WURST pulse (refocussing)
                 set par(sweep_rate3) [expr ($par(Delta)*1e3)/($par(tw3)*1e-6)]
                 set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
-                set rfsh3 [list2shape [wurst $par(N) $par(tw3) $par(Delta) $par(rf3) 0.0]]
+                set rfsh3 [list2shape [wurst $par(N3) $par(tw3) $par(Delta) $par(rf3) 0.0]]
 
                 # Set filenames for WURST type experiments
-                set par(filename) $par(name)_$par(type)_rffactor_$par(rf_factor1)_$par(rf_factor2)_$par(rf_factor3)_tw_$par(tw1)_$par(tw2)_$par(tw3)_delays_$par(tau1)_$par(tau2)_$par(tau3)_delta_$par(Delta)_N_$par(N)
+                set par(filename) $par(name)_$par(type)_rffactor_$par(rf_factor1)_$par(rf_factor2)_$par(rf_factor3)_tw_$par(tw1)_$par(tw2)_$par(tw3)_delays_$par(tau1)_$par(tau2)_$par(tau3)_delta_$par(Delta)_N_$par(N1)_$par(N2)_$par(N3)
 
-                set rfsh_shape1 [wurst_phasecorr $par(N) $par(tw1) $par(Delta) 100 $par(filename_phasecorrect)]
-                set rfsh_shape2 [wurst $par(N) $par(tw2) $par(Delta) 100]
-                set rfsh_shape3 [wurst $par(N) $par(tw3) $par(Delta) 100]
+                set rfsh_shape1 [wurst_phasecorr $par(N1) $par(tw1) $par(Delta) 100 $par(filename_phasecorrect)]
+                set rfsh_shape2 [wurst $par(N2) $par(tw2) $par(Delta) 100]
+                set rfsh_shape3 [wurst $par(N3) $par(tw3) $par(Delta) 100]
 
                 printwave $rfsh_shape1 1
                 printwave $rfsh_shape2 2
                 printwave $rfsh_shape3 3
 
-                set rfsh11 [list2shape [wurst_phasecorr $par(N) $par(tw1) $par(Delta) 1 $par(filename_phasecorrect)]]
-                set rfsh22 [list2shape [wurst $par(N) $par(tw2) $par(Delta) 1]]
-                set rfsh33 [list2shape [wurst $par(N) $par(tw3) $par(Delta) 1]]
+                set rfsh11 [list2shape [wurst_phasecorr $par(N1) $par(tw1) $par(Delta) 1 $par(filename_phasecorrect)]]
+                set rfsh22 [list2shape [wurst $par(N2) $par(tw2) $par(Delta) 1]]
+                set rfsh33 [list2shape [wurst $par(N3) $par(tw3) $par(Delta) 1]]
 
                 save_shape $rfsh1 $par(filename).simpson1
                 save_shape $rfsh2 $par(filename).simpson2
@@ -191,20 +193,20 @@ def create_simpson():  # Write simpson input files
                 # Set first WURST pulse (excitation)
                 set par(sweep_rate1) [expr ($par(Delta)*1e3)/($par(tw1)*1e-6)]
                 set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-                set rfsh1 [list2shape [wurst_phasecorr $par(N) $par(tw1) $par(Delta) $par(rf1) $par(filename_phasecorrect) $par(ph1) 0.05]]
+                set rfsh1 [list2shape [wurst_phasecorr $par(N1) $par(tw1) $par(Delta) $par(rf1) $par(filename_phasecorrect) $par(ph1) 0.05]]
 
                 # Set second WURST pulse (refocussing)
                 set par(sweep_rate2) [expr ($par(Delta)*1e3)/($par(tw2)*1e-6)]
                 set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-                set rfsh2 [list2shape [wurst $par(N) $par(tw2) $par(Delta) $par(rf2) $par(ph2) 0.05]]
+                set rfsh2 [list2shape [wurst $par(N2) $par(tw2) $par(Delta) $par(rf2) $par(ph2) 0.05]]
 
                 # Set third WURST pulse (refocussing)
                 set par(sweep_rate3) [expr ($par(Delta)*1e3)/($par(tw3)*1e-6)]
                 set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
-                set rfsh3 [list2shape [wurst $par(N) $par(tw3) $par(Delta) $par(rf3) $par(ph3) 0.05]]
+                set rfsh3 [list2shape [wurst $par(N3) $par(tw3) $par(Delta) $par(rf3) $par(ph3) 0.05]]
 
                 # Set filenames for WURST type experiments
-                set par(filename) $par(name)_$par(type)_rffactor_$par(rf_factor1)_$par(rf_factor2)_$par(rf_factor3)_tw_$par(tw1)_$par(tw2)_$par(tw3)_delays_$par(tau1)_$par(tau2)_$par(tau3)_delta_$par(Delta)_N_$par(N)
+                set par(filename) $par(name)_$par(type)_rffactor_$par(rf_factor1)_$par(rf_factor2)_$par(rf_factor3)_tw_$par(tw1)_$par(tw2)_$par(tw3)_delays_$par(tau1)_$par(tau2)_$par(tau3)_delta_$par(Delta)_N_$par(N1)_$par(N2)_$par(N3)
             }
 
                 foreach offset_value        $offset_value_list {
@@ -347,14 +349,14 @@ def create_simpson():  # Write simpson input files
             set fp [open $filename w]
             set np [llength $wave]
             
-            puts $fp "##TITLE= WURST-${par(N)} shape (duration $par(tw1) us, sweep width $par(Delta) kHz, step size: 0.05 us, sweep rate: $par(sweep_rate1) MHz/ms)"
+            puts $fp "##TITLE= WURST-${par(N1)} shape (duration $par(tw1) us, sweep width $par(Delta) kHz, step size: 0.05 us, sweep rate: $par(sweep_rate1) MHz/ms)"
             puts $fp "##USAGE= WURST pulse for inversion and excitation"
             puts $fp "##JCAMP-DX= 5.00 \$\$ Bruker JCAMP library"
             puts $fp "##DATA TYPE= Shape Data"
             puts $fp "##ORIGIN= Generated from wurst program"
             puts $fp "##DATE= "
             puts $fp "##TIME= "
-            puts $fp "##\$SHAPE_PARAMETERS= Type: Wurst ; Total Sweep-Width \[Hz\] [expr $par(Delta)*1000.0] ; Length of Pulse \[usec\] [expr 1.0*$par(tw1)] ; Amplitude Power Index ${par(N)}.0 ; 1=High to low field, -1=Low to high field 1"
+            puts $fp "##\$SHAPE_PARAMETERS= Type: Wurst ; Total Sweep-Width \[Hz\] [expr $par(Delta)*1000.0] ; Length of Pulse \[usec\] [expr 1.0*$par(tw1)] ; Amplitude Power Index ${par(N1)}.0 ; 1=High to low field, -1=Low to high field 1"
             puts $fp "##MINX= 0.000000e+00"
             puts $fp "##MAXX= 1.000000e+02"
             puts $fp "##MINY= 0.000000e+00"
@@ -390,7 +392,9 @@ def simulate_sequence():  # Start simulation with set parameter
     global tau1
     global tau2
     global tau3
-    global N
+    global N1
+    global N2
+    global N3
     global ss_offset
     global rms_limit
     global poly_order
@@ -406,7 +410,9 @@ def simulate_sequence():  # Start simulation with set parameter
             tw3,
             'double_echo',
             delta,
-            N,
+            N1,
+            N2,
+            N3,
             rffactor1,
             rffactor2,
             rffactor3,
@@ -421,7 +427,7 @@ def simulate_sequence():  # Start simulation with set parameter
                         '_tw_' + tw1 + '_' + tw2 + '_' + tw3 +
                         '_delays_' + tau1 + '_' + tau2 + '_' + tau3 +
                         '_delta_' + delta +
-                        '_N_' + N +
+                        '_N_' + N1 + '_' + N2 + '_' + N3 +
                         '.out')
 
     fig = plt.figure(figsize=(6.5, 6))
@@ -603,7 +609,9 @@ def simulate_sequence():  # Start simulation with set parameter
         tw3,
         'create_shapes',
         delta,
-        N,
+        N1,
+        N2,
+        N3,
         rffactor1,
         rffactor2,
         rffactor3,
@@ -715,17 +723,21 @@ def selection_layout():  # Generates a selection Layout
 
 def read_parameter(exp_type):  # Update the "output" text element to be the value of "input" element and set input to parameter
     global simulation_window
-    if(exp_type=='WCHORUS'):  # define WCHORUS parameter
-        global delta
-        global tw1
-        global tw2
-        global tw3
-        global rffactor1
-        global rffactor2
-        global rffactor3
-        global tau3
-        global N
+    global delta
+    global tw1
+    global tw2
+    global tw3
+    global rffactor1
+    global rffactor2
+    global rffactor3
+    global tau1
+    global tau2
+    global tau3
+    global N1
+    global N2
+    global N3
 
+    if(exp_type=='WCHORUS'):  # define WCHORUS parameter
         simulation_window['delta_out'].update(simulation_values['delta'])
         simulation_window['tw1_out'].update(simulation_values['tw1'])
         simulation_window['tw2_out'].update(simulation_values['tw2'])
@@ -748,7 +760,39 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         rffactor2   = simulation_values['rffactor2']
         rffactor3   = simulation_values['rffactor3']
         tau3        = simulation_values['tau3']
-        N           = simulation_values['N1']
+        N1           = simulation_values['N1']
+        N2           = simulation_values['N2']
+        N3           = simulation_values['N3']
+    elif(exp_type=='Double_Echo'):  # define WCHORUS parameter
+        simulation_window['delta_out'].update(simulation_values['delta'])
+        simulation_window['tw1_out'].update(simulation_values['tw1'])
+        simulation_window['tw2_out'].update(simulation_values['tw2'])
+        simulation_window['tw3_out'].update(simulation_values['tw3'])
+        simulation_window['rffactor1_out'].update(simulation_values['rffactor1'])
+        simulation_window['rffactor2_out'].update(simulation_values['rffactor2'])
+        simulation_window['rffactor3_out'].update(simulation_values['rffactor3'])
+        simulation_window['tau1_out'].update(simulation_values['tau1'])
+        simulation_window['tau2_out'].update(simulation_values['tau2'])
+        simulation_window['tau3_out'].update(simulation_values['tau3'])
+        simulation_window['N1_out'].update(simulation_values['N1'])
+        simulation_window['N2_out'].update(simulation_values['N2'])
+        simulation_window['N3_out'].update(simulation_values['N3'])
+        # window['ss_offset_out'].update(values['ss_offset'])
+        # window['rms_limit_out'].update(values['rms_limit'])
+
+        delta       = simulation_values['delta']
+        tw1         = simulation_values['tw1']
+        tw2         = simulation_values['tw2']
+        tw3         = simulation_values['tw3']
+        rffactor1   = simulation_values['rffactor1']
+        rffactor2   = simulation_values['rffactor2']
+        rffactor3   = simulation_values['rffactor3']
+        tau1        = simulation_values['tau1']
+        tau2        = simulation_values['tau2']
+        tau3        = simulation_values['tau3']
+        N1           = simulation_values['N1']
+        N2           = simulation_values['N2']
+        N3           = simulation_values['N3']
 
 # Declare Parameter
 delta        = '0'
@@ -761,7 +805,9 @@ rffactor3    = '0'
 tau1         = '0'
 tau2         = '0'
 tau3         = '0'
-N            = '0'
+N1           = '0'
+N2           = '0'
+N3           = '0'
 ss_offset    = '50000'
 rms_limit    = 500
 poly_order   = 42
