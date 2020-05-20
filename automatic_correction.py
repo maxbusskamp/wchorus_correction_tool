@@ -713,13 +713,9 @@ def exp_layout(exp_type):  #Generate a WCHORUS Layout
                 [sg.Text('Shape parameter of P1:'), sg.Text(size=(10,1), key='N1_out')],
                 [sg.Input(key='N1', size=(10,1))]]
         pulse2 = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
-                [sg.Input(key='tw2', size=(15,1))],
                 [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
-                [sg.Input(key='rffactor2', size=(15,1))],
-                [sg.Text('Shape parameter of P2:'), sg.Text(size=(10,1), key='N2_out')],
-                [sg.Input(key='N2', size=(15,1))]]
-        delay  = [[sg.Text('Duration of D (us):'), sg.Text(size=(10,1), key='tau2_out')],
-                [sg.Input(key='tau2', size=(15,1))]]
+                [sg.Text('Shape parameter of P2:'), sg.Text(size=(10,1), key='N2_out')]]
+        delay  = [[sg.Text('Duration of D (us):'), sg.Text(size=(10,1), key='tau2_out')]]
         pulse3 = [[sg.Text('Duration of P3 (us):'), sg.Text(size=(10,1), key='tw3_out')],
                 [sg.Input(key='tw3', size=(15,1))],
                 [sg.Text('RF-Factor of P3:'), sg.Text(size=(10,1), key='rffactor3_out')],
@@ -795,15 +791,11 @@ def exp_layout(exp_type):  #Generate a WCHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
                    [sg.Input(key='delta1', size=(15,1))]]
         pulse2  = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
-                   [sg.Input(key='tw2', size=(15,1))],
                    [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
-                   [sg.Input(key='rffactor2', size=(15,1))],
+                   [sg.Input(key='rffactor2', size=(10,1))],
                    [sg.Text('Shape parameter of P2:'), sg.Text(size=(10,1), key='N2_out')],
-                   [sg.Input(key='N2', size=(15,1))],
-                   [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')],
-                   [sg.Input(key='delta2', size=(15,1))]]
-        delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')],
-                   [sg.Input(key='tau1', size=(15,1))]]
+                   [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')]]
+        delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')]]
 
         layout  = [[sg.Text('Define Pulse Parameter here, then click start Simulation'), sg.Text(size=(15,1), key='text1_out')],
                    [sg.Text('Shapes are saved in this folder and can be used by Bruker Spectrometer'), sg.Text(size=(15,1), key='text3_out')],
@@ -844,33 +836,52 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
     global N3
 
     if(exp_type == 'WCHORUS'):  # define WCHORUS parameter
-        simulation_window['delta1_out'].update(simulation_values['delta1'])
-        simulation_window['tw1_out'].update(simulation_values['tw1'])
-        simulation_window['tw2_out'].update(simulation_values['tw2'])
-        simulation_window['tw3_out'].update(simulation_values['tw3'])
-        simulation_window['rffactor1_out'].update(simulation_values['rffactor1'])
-        simulation_window['rffactor2_out'].update(simulation_values['rffactor2'])
-        simulation_window['rffactor3_out'].update(simulation_values['rffactor3'])
-        simulation_window['tau2_out'].update(simulation_values['tau2'])
-        simulation_window['N1_out'].update(simulation_values['N1'])
-        simulation_window['N2_out'].update(simulation_values['N2'])
-        simulation_window['N3_out'].update(simulation_values['N3'])
-        # window['ss_offset_out'].update(values['ss_offset'])
-        # window['rms_limit_out'].update(values['rms_limit'])
 
         delta1       = simulation_values['delta1']
         delta2       = simulation_values['delta1']
         delta3       = simulation_values['delta1']
-        tw1         = simulation_values['tw1']
-        tw2         = simulation_values['tw2']
-        tw3         = simulation_values['tw3']
-        rffactor1   = simulation_values['rffactor1']
-        rffactor2   = simulation_values['rffactor2']
-        rffactor3   = simulation_values['rffactor3']
-        tau2        = simulation_values['tau2']
+        tw1          = simulation_values['tw1']
+        tw3          = simulation_values['tw3']
+        rffactor1    = simulation_values['rffactor1']
+        rffactor3    = simulation_values['rffactor3']
         N1           = simulation_values['N1']
-        N2           = simulation_values['N2']
         N3           = simulation_values['N3']
+        tau2         = '{:.1f}'.format(float(tw1)/2.0)
+        tw2          = '{:.1f}'.format(float(tau2)+float(tw3))
+        rffactor2    = rffactor3
+        N2           = N3
+
+        simulation_window['delta1_out'].update(simulation_values['delta1'])
+        simulation_window['tw1_out'].update(simulation_values['tw1'])
+        simulation_window['tw2_out'].update(tw2)
+        simulation_window['tw3_out'].update(simulation_values['tw3'])
+        simulation_window['rffactor1_out'].update(simulation_values['rffactor1'])
+        simulation_window['rffactor2_out'].update(rffactor2)
+        simulation_window['rffactor3_out'].update(simulation_values['rffactor3'])
+        simulation_window['tau2_out'].update(tau2)
+        simulation_window['N1_out'].update(simulation_values['N1'])
+        simulation_window['N2_out'].update(N2)
+        simulation_window['N3_out'].update(simulation_values['N3'])
+        # window['ss_offset_out'].update(values['ss_offset'])
+        # window['rms_limit_out'].update(values['rms_limit'])
+
+
+
+        simpson_info = (f"Experiment = {exp_type} \n"
+                    f"delta1 = {delta1} \n"
+                    f"delta2 = {delta2} \n"
+                    f"delta3 = {delta3} \n"
+                    f"tw1 = {tw1} \n"
+                    f"tw2 = {tw2} \n"
+                    f"tw3 = {tw3} \n"
+                    f"rffactor1 = {rffactor1} \n"
+                    f"rffactor2 = {rffactor2} \n"
+                    f"rffactor3 = {rffactor3} \n"
+                    f"tau2 = {tau2} \n"
+                    f"N1 = {N1} \n"
+                    f"N2 = {N2} \n"
+                    f"N3 = {N3} \n")
+
     elif(exp_type == 'double_echo'):  # define WCHORUS parameter
         simulation_window['delta1_out'].update(simulation_values['delta1'])
         simulation_window['delta2_out'].update(simulation_values['delta2'])
@@ -905,28 +916,64 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         N1           = simulation_values['N1']
         N2           = simulation_values['N2']
         N3           = simulation_values['N3']
+        
+        simpson_info = (f"Experiment = {exp_type} \n"
+                    f"delta1 = {delta1} \n"
+                    f"delta2 = {delta2} \n"
+                    f"delta3 = {delta3} \n"
+                    f"tw1 = {tw1} \n"
+                    f"tw2 = {tw2} \n"
+                    f"tw3 = {tw3} \n"
+                    f"rffactor1 = {rffactor1} \n"
+                    f"rffactor2 = {rffactor2} \n"
+                    f"rffactor3 = {rffactor3} \n"
+                    f"tau1 = {tau1} \n"
+                    f"tau2 = {tau2} \n"
+                    f"tau3 = {tau3} \n"
+                    f"N1 = {N1} \n"
+                    f"N2 = {N2} \n"
+                    f"N3 = {N3} \n")
+
     elif(exp_type == 'ABSTRUSE'):  # define WCHORUS parameter
+
+        delta1      = simulation_values['delta1']
+        delta2      = delta1
+        tw1         = simulation_values['tw1']
+        tw2         = '{:.1f}'.format(float(tw1)/2.0)
+        rffactor1   = simulation_values['rffactor1']
+        rffactor2   = simulation_values['rffactor2']
+        tau1        = tw2
+        N1           = simulation_values['N1']
+        N2           = N1
+
         simulation_window['delta1_out'].update(simulation_values['delta1'])
-        simulation_window['delta2_out'].update(simulation_values['delta2'])
+        simulation_window['delta2_out'].update(delta2)
         simulation_window['tw1_out'].update(simulation_values['tw1'])
-        simulation_window['tw2_out'].update(simulation_values['tw2'])
+        simulation_window['tw2_out'].update(tw2)
         simulation_window['rffactor1_out'].update(simulation_values['rffactor1'])
         simulation_window['rffactor2_out'].update(simulation_values['rffactor2'])
-        simulation_window['tau1_out'].update(simulation_values['tau1'])
+        simulation_window['tau1_out'].update(tau1)
         simulation_window['N1_out'].update(simulation_values['N1'])
-        simulation_window['N2_out'].update(simulation_values['N2'])
+        simulation_window['N2_out'].update(N2)
         # window['ss_offset_out'].update(values['ss_offset'])
         # window['rms_limit_out'].update(values['rms_limit'])
 
-        delta1      = simulation_values['delta1']
-        delta2      = simulation_values['delta2']
-        tw1         = simulation_values['tw1']
-        tw2         = simulation_values['tw2']
-        rffactor1   = simulation_values['rffactor1']
-        rffactor2   = simulation_values['rffactor2']
-        tau1        = simulation_values['tau1']
-        N1           = simulation_values['N1']
-        N2           = simulation_values['N2']
+        
+    
+        simpson_info = (f"Experiment = {exp_type} \n"
+                        f"delta1 = {delta1} \n"
+                        f"delta2 = {delta2} \n"
+                        f"tw1 = {tw1} \n"
+                        f"tw2 = {tw2} \n"
+                        f"rffactor1 = {rffactor1} \n"
+                        f"rffactor2 = {rffactor2} \n"
+                        f"tau1 = {tau1} \n"
+                        f"N1 = {N1} \n"
+                        f"N2 = {N2} \n")
+
+    simpson_infofile = open('simpson.info', 'w')
+    simpson_infofile.write(simpson_info)
+    simpson_infofile.close()
 
 # Declare Parameter
 delta1       = '0'
