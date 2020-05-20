@@ -503,143 +503,19 @@ def simulate_sequence(exp_type):  # Start simulation with set parameter
     ###############################################################################
     # Interpolation
     ###############################################################################
-    weight = []
-    for i in range(len(phase[:, 0])):
-        if(i < len(phase[:, 0])*start):
-            weight.append(outer_weight)
-        elif(i > len(phase[:, 0])*end):
-            weight.append(outer_weight)
-        else:
-            weight.append(1.0)
-
-    coefs = poly.polyfit(phase[:, 0], phase[:, 1], poly_order, w=weight)
-    ffit = poly.Polynomial(coefs)
 
     np_tw = round(float(tw1)/0.05)
     pulselength = np.linspace(phase[0, 0], phase[-1, 0], np_tw)
 
-    phase_interpol = ffit(pulselength)
 
-    phase_interpol2 = []
-    phase_interpol2.append(pulselength)
-    phase_interpol2.append(phase_interpol)
+    interpol = interpolate.interp1d(phase[:, 0], phase[:, 1])
+    interpol = interpol(pulselength)
 
-    weight = []
-    for i in range(len(phase_interpol2[0])):
-        if(i < len(phase_interpol2[0])*start):
-            weight.append(outer_weight)
-        elif(i > len(phase_interpol2[0])*end):
-            weight.append(outer_weight)
-        else:
-            weight.append(1.0)
-
-    phase_interpol2[1]=phase_interpol2[1]*weight
-
-    interpol_org = interpolate.interp1d(phase[:, 0], phase[:, 1])
-    interpol_org = interpol_org(phase_interpol2[0])
-
-    rms_start = 0.0
-    for i in range(len(phase_interpol2[0])):
-        if(i < len(phase_interpol2[0])*start):
-            rms_start = rms_start + 0.0
-        elif(i > len(phase_interpol2[0])*end):
-            rms_start = rms_start + 0.0
-        else:
-            rms_start = rms_start + abs(phase_interpol2[1][i] - interpol_org[i])
-    rms = rms_start
-
-    while abs(rms_start-rms) < rms_limit:
-        rms_start = rms
-        start = start - rmssteps
-        end = end + rmssteps
-        weight = []
-        for i in range(len(phase[:, 0])):
-            if(i < len(phase[:, 0])*start):
-                weight.append(outer_weight)
-            elif(i > len(phase[:, 0])*end):
-                weight.append(outer_weight)
-            else:
-                weight.append(1.0)
-
-        coefs = poly.polyfit(phase[:, 0], phase[:, 1], poly_order, w=weight)
-        ffit = poly.Polynomial(coefs)
-
-        pulselength = np.linspace(phase[0, 0], phase[-1, 0], np_tw)
-
-        phase_interpol = ffit(pulselength)
-
-        phase_interpol2 = []
-        phase_interpol2.append(pulselength)
-        phase_interpol2.append(phase_interpol)
-
-        weight = []
-        for i in range(len(phase_interpol2[0])):
-            if(i < len(phase_interpol2[0])*start):
-                weight.append(outer_weight)
-            elif(i > len(phase_interpol2[0])*end):
-                weight.append(outer_weight)
-            else:
-                weight.append(1.0)
-
-        phase_interpol2[1]=phase_interpol2[1]*weight
-
-        rms = 0.0
-        for i in range(len(phase_interpol2[0])):
-            if(i < len(phase_interpol2[0])*start):
-                rms = rms + 0.0
-            elif(i > len(phase_interpol2[0])*end):
-                rms = rms + 0.0
-            else:
-                rms = rms + abs(phase_interpol2[1][i] - interpol_org[i])
-        if (start < 0.0-rmssteps):
-            break
-
-    start = start + rmssteps
-    end = end - rmssteps
-    weight = []
-    for i in range(len(phase[:, 0])):
-        if(i < len(phase[:, 0])*start):
-            weight.append(outer_weight)
-        elif(i > len(phase[:, 0])*end):
-            weight.append(outer_weight)
-        else:
-            weight.append(1.0)
-
-    coefs = poly.polyfit(phase[:, 0], phase[:, 1], poly_order, w=weight)
-    ffit = poly.Polynomial(coefs)
-
-    pulselength = np.linspace(phase[0, 0], phase[-1, 0], np_tw)
-
-    phase_interpol = ffit(pulselength)
-
-    phase_interpol2 = []
-    phase_interpol2.append(pulselength)
-    phase_interpol2.append(phase_interpol)
-
-    weight = []
-    for i in range(len(phase_interpol2[0])):
-        if(i < len(phase_interpol2[0])*start):
-            weight.append(outer_weight)
-        elif(i > len(phase_interpol2[0])*end):
-            weight.append(outer_weight)
-        else:
-            weight.append(1.0)
-
-    phase_interpol2[1]=phase_interpol2[1]*weight
-
-    rms = 0.0
-    for i in range(len(phase_interpol2[0])):
-        if(i < len(phase_interpol2[0])*start):
-            rms = rms + 0.0
-        elif(i > len(phase_interpol2[0])*end):
-            rms = rms + 0.0
-        else:
-            rms = rms + abs(phase_interpol2[1][i] - interpol_org[i])
 
     ###############################################################################
     # Plotting
     ###############################################################################
-    np.savetxt(filename_phasecorr.replace('.out', '.phasecorr'), phase_interpol2[1], delimiter=' ')
+    np.savetxt(filename_phasecorr.replace('.out', '.phasecorr'), interpol, delimiter=' ')
 
     ax1.plot(dat_phasecorr[:, 0]/1000, dat_phasecorr[:, 1], label=r'Real')
     ax1.plot(dat_phasecorr[:, 0]/1000, dat_phasecorr[:, 2], label=r'Imag')
@@ -648,7 +524,7 @@ def simulate_sequence(exp_type):  # Start simulation with set parameter
     ax1.invert_xaxis()
     ax1.set_ylabel('Magnetization / a.u.')
     ax2.plot(phase[:, 0]/1000, phase[:, 1], ls='-', c='k', label='Phase')
-    ax2.plot(phase_interpol2[0][:]/1000, phase_interpol2[1][:], ".", ms=0.5, c='r', label='Interpolation')
+    ax2.plot(pulselength/1000, interpol, ".", ms=0.5, c='r', label='Interpolation')
     ax2.legend(fontsize=6)
     ax2.invert_xaxis()
     ax2.set_xlabel('Frequency Offset / kHz')
