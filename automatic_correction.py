@@ -733,6 +733,8 @@ def exp_layout(exp_type):  #Generate a WCHORUS Layout
                 [sg.Column(pulse1), sg.Column(pulse2), sg.Column(delay), sg.Column(pulse3)],
                 [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
                 [sg.Input(key='delta1', size=(15,1))],
+                [sg.Text('Offset Stepsize (Hz):'), sg.Text(size=(10,1), key='ss_offset_out')],
+                [sg.Input(key='ss_offset', size=(10,1))],
                 [sg.Button('Start Simulation'), sg.Button('Exit')]
                 ]
     elif(exp_type == 'double_echo'):
@@ -777,6 +779,8 @@ def exp_layout(exp_type):  #Generate a WCHORUS Layout
                    button_color=(sg.theme_background_color(),sg.theme_background_color()),
                    border_width=0, key='sequence')],
                    [sg.Column(pulse1), sg.Column(delay1), sg.Column(pulse2), sg.Column(delay2), sg.Column(pulse3), sg.Column(delay3)],
+                   [sg.Text('Offset Stepsize (Hz):'), sg.Text(size=(10,1), key='ss_offset_out')],
+                   [sg.Input(key='ss_offset', size=(10,1))],
                    [sg.Button('Start Simulation'), sg.Button('Exit')]
                   ]
     elif(exp_type == 'ABSTRUSE'):
@@ -805,6 +809,8 @@ def exp_layout(exp_type):  #Generate a WCHORUS Layout
                    button_color=(sg.theme_background_color(),sg.theme_background_color()),
                    border_width=0, key='sequence')],
                    [sg.Column(pulse1), sg.Column(pulse2), sg.Column(delay1)],
+                   [sg.Text('Offset Stepsize (Hz):'), sg.Text(size=(10,1), key='ss_offset_out')],
+                   [sg.Input(key='ss_offset', size=(10,1))],
                    [sg.Button('Start Simulation'), sg.Button('Exit')]
                   ]
     return layout
@@ -834,6 +840,7 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
     global N1
     global N2
     global N3
+    global ss_offset
 
     if(exp_type == 'WCHORUS'):  # define WCHORUS parameter
 
@@ -846,6 +853,7 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         rffactor3    = simulation_values['rffactor3']
         N1           = simulation_values['N1']
         N3           = simulation_values['N3']
+        ss_offset    = simulation_values['ss_offset']
         tau2         = '{:.1f}'.format(float(tw1)/2.0)
         tw2          = '{:.1f}'.format(float(tau2)+float(tw3))
         rffactor2    = rffactor3
@@ -862,12 +870,13 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         simulation_window['N1_out'].update(simulation_values['N1'])
         simulation_window['N2_out'].update(N2)
         simulation_window['N3_out'].update(simulation_values['N3'])
-        # window['ss_offset_out'].update(values['ss_offset'])
+        simulation_window['ss_offset_out'].update(simulation_values['ss_offset'])
         # window['rms_limit_out'].update(values['rms_limit'])
 
 
 
         simpson_info = (f"Experiment = {exp_type} \n"
+                    f"Offset Stepsize = {ss_offset} \n"
                     f"delta1 = {delta1} \n"
                     f"delta2 = {delta2} \n"
                     f"delta3 = {delta3} \n"
@@ -898,6 +907,8 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         simulation_window['N1_out'].update(simulation_values['N1'])
         simulation_window['N2_out'].update(simulation_values['N2'])
         simulation_window['N3_out'].update(simulation_values['N3'])
+        simulation_window['ss_offset_out'].update(simulation_values['ss_offset'])
+        
         # window['ss_offset_out'].update(values['ss_offset'])
         # window['rms_limit_out'].update(values['rms_limit'])
 
@@ -916,8 +927,10 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         N1           = simulation_values['N1']
         N2           = simulation_values['N2']
         N3           = simulation_values['N3']
+        ss_offset    = simulation_values['ss_offset']
         
         simpson_info = (f"Experiment = {exp_type} \n"
+                    f"Offset Stepsize = {ss_offset} \n"
                     f"delta1 = {delta1} \n"
                     f"delta2 = {delta2} \n"
                     f"delta3 = {delta3} \n"
@@ -945,6 +958,7 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         tau1        = tw2
         N1           = simulation_values['N1']
         N2           = N1
+        ss_offset    = simulation_values['ss_offset']
 
         simulation_window['delta1_out'].update(simulation_values['delta1'])
         simulation_window['delta2_out'].update(delta2)
@@ -955,12 +969,14 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
         simulation_window['tau1_out'].update(tau1)
         simulation_window['N1_out'].update(simulation_values['N1'])
         simulation_window['N2_out'].update(N2)
+        simulation_window['ss_offset_out'].update(simulation_window['ss_offset'])
         # window['ss_offset_out'].update(values['ss_offset'])
         # window['rms_limit_out'].update(values['rms_limit'])
 
         
     
         simpson_info = (f"Experiment = {exp_type} \n"
+                        f"Offset Stepsize = {ss_offset} \n"
                         f"delta1 = {delta1} \n"
                         f"delta2 = {delta2} \n"
                         f"tw1 = {tw1} \n"
