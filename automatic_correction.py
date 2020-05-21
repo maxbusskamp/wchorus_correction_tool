@@ -19,6 +19,7 @@ import numpy.polynomial.polynomial as poly
 from scipy import interpolate
 import PySimpleGUI as sg
 import glob
+from datetime import datetime
 
 plt.rc('lines', linewidth=1)
 plt.rc('axes', titlesize=18, labelsize=12)
@@ -863,7 +864,7 @@ def read_parameter(exp_type):  # Update the "output" text element to be the valu
                         f"N1 = {N1} \n"
                         f"N2 = {N2} \n")
 
-    simpson_infofile = open('simpson.info', 'w')
+    simpson_infofile = open(str(datetime.today()).replace('-','').replace(':','').replace(' ','').split('.')[0] + '.info', 'w')
     simpson_infofile.write(simpson_info)
     simpson_infofile.close()
 
