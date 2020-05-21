@@ -2,14 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Aug 14 14:42:31 2019
-
-@author: m_buss13
+@author: Max Busskamp
 """
-
-#%%
-###############################################################################
-# Standard parameter
-###############################################################################
 import os
 from subprocess import call
 from subprocess import run
@@ -884,29 +878,23 @@ tau3         = '0'
 N1           = '0'
 N2           = '0'
 N3           = '0'
-ss_offset    = '50000'
-rms_limit    = 500
-poly_order   = 42
-start        = 0.2
-end          = 0.8
-outer_weight = 0.0
-rmssteps     = 0.01
+ss_offset    = '0'
 
 # Create Sequence Selection Window
 sequence_selection = sg.Window('Phasecorrection Tool', selection_layout(), grab_anywhere=True)
-# Event loop
-while True:
+
+while True:  # Event loop creating windows
     event, values = sequence_selection.read()   # Read the event that happened and the values dictionary
     print(event, values)
-    if event == sg.WIN_CLOSED or event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
+    if event == sg.WIN_CLOSED or event == 'Exit':  # If user closed window with X or if user clicked "Exit" button then exit
         break
     simulation_window = sg.Window('Simulation Parameter', exp_layout(values['exp_type'][0]), grab_anywhere=True)
-    while True:
+    while True:  # Starting new window with selected experiment
         simulation_event, simulation_values = simulation_window.read()   # Read the event that happened and the values dictionary
         print(simulation_event, simulation_values)
         if simulation_event == sg.WIN_CLOSED or simulation_event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
             break
-        if simulation_event == 'Start Simulation':
+        if simulation_event == 'Start Simulation':  # Starting simulations with input parameter
             read_parameter(values['exp_type'][0])
             create_simpson()
             simulate_sequence(values['exp_type'][0])
