@@ -551,10 +551,8 @@ def simulate_sequence(exp_type):  # Start simulation with set parameter
         filename_phasecorr.replace('.out', '.phasecorr'),
         ss_offset])
 
-    run(['rm', '-f', 'phasecorrected.spinsys'])
-    run(['rm', '-f', 'offset.spinsys'])
     run(['rm', '-f', 'phasecorrection_liquid.tcl'])
-    run(['rm', '-f', filename_phasecorr])
+    # run(['rm', '-f', filename_phasecorr])
     run(['rm', '-f', glob.glob('*create_shapes_*.out')[0]])
 
     sg.popup('Simulation finished! Close to show Plot!')
