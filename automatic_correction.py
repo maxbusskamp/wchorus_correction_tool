@@ -1131,7 +1131,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
 
 def selection_layout():  # Generates a selection Layout
     layout = [[sg.Text('Select Shape:'), sg.Combo(['WURST', 'tanhpulse', 'hspulse'], key='shape_type')],
-              [sg.Text('Select Pulse Sequence:'), sg.Combo(['SHAPEsingle', 'double_echo', 'CHORUS', 'ABSTRUSE'], key='exp_type')],
+              [sg.Text('Select Sequence:'), sg.Combo(['SHAPEsingle', 'double_echo', 'CHORUS', 'ABSTRUSE'], key='exp_type')],
               [sg.Button('Continue'), sg.Button('Exit')]]
     return(layout)
 
@@ -1403,7 +1403,6 @@ while True:  # Event loop creating windows
     if event == sg.WIN_CLOSED or event == 'Exit':  # If user closed window with X or if user clicked "Exit" button then exit
         break
     if event == 'Continue':  # Starting new window with selected experiment
-        sequence_selection.close()
         simulation_window = sg.Window('Simulation Parameter', exp_layout(values['exp_type'], values['shape_type']), grab_anywhere=True)
         while True:
             simulation_event, simulation_values = simulation_window.read()   # Read the event that happened and the values dictionary
@@ -1414,4 +1413,5 @@ while True:  # Event loop creating windows
                 read_parameter(values['exp_type'], values['shape_type'])
                 create_simpson()
                 simulate_sequence(values['exp_type'], values['shape_type'])
-        simulation_window.close()
+    simulation_window.close()
+sequence_selection.close()
