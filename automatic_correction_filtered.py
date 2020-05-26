@@ -39,7 +39,7 @@ def create_simpson():  # Write simpson input files
         spin_rate        0
         crystal_file     alpha0beta0
         gamma_angles     1
-        np               2
+        np               1
         start_operator   Inz
         detect_operator  Inp
         sw               2000e3
@@ -51,29 +51,35 @@ def create_simpson():  # Write simpson input files
     proc pulseq {} {
         global par rfsh1 rfsh2 rfsh3
         reset
+        matrix set 1 totalcoherence { -1 }
+        matrix set 2 totalcoherence { 1 }
 
         # Experiment selection done by scanning for the type string
         if {[string equal $par(type) "double_echo"] || [string equal $par(type) "CHORUS"]} {
             pulse_shaped $par(tw1) $rfsh1
+            filter 1
             delay $par(tau1)
             pulse_shaped $par(tw2) $rfsh2
+            filter 2
             delay $par(tau2)
             pulse_shaped $par(tw3) $rfsh3
+            filter 1
             delay $par(tau3)
         } elseif {[string equal $par(type) "ABSTRUSE"]} {
             pulse_shaped $par(tw1) $rfsh1
+            filter 1
             pulse_shaped $par(tw2) $rfsh2
+            filter 2
             delay $par(tau1)
         } elseif {[string equal $par(type) "SHAPEsingle"]} {
             pulse_shaped $par(tw1) $rfsh1
+            filter 1
         } elseif {[string equal $par(type) "create_shapes_SHAPEsingle"] || [string equal $par(type) "create_shapes_CHORUS"] || [string equal $par(type) "create_shapes_double_echo"] || [string equal $par(type) "create_shapes_ABSTRUSE"]} {
         } else {
             puts "Please select excitation mode in main!"
             exit
         }
-
-        store 1
-        acq 2 1 $par(ph31)
+        acq
     }
 
     proc main {} {
@@ -125,26 +131,14 @@ def create_simpson():  # Write simpson input files
 
         set results {}
 
-        set par(phasecycles) 16
-        set par(ph1_list)  { 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 }
-        set par(ph2_list)  { 0 90 180 270 0 90 180 270 0 90 180 270 0 90 180 270 }
-        set par(ph3_list)  { 0 0 0 0 90 90 90 90 180 180 180 180 270 270 270 270 }
-        set par(ph31_list) { 0 180 0 180 180 0 180 0 0 180 0 180 180 0 180 0 }
+        set par(ph1)  0
+        set par(ph2)  0
+        set par(ph3)  0
+        set par(ph31) 0
 
         if {[string first "create_shapes_" $par(type)] == 0} {
             set offset_value_list { 0 }
-            set par(phasecycles) 1
-        } elseif {[string equal $par(type) "ABSTRUSE"]} {
-            set par(phasecycles) 4
-        } elseif {[string equal $par(type) "SHAPEsingle"]} {
-            set par(phasecycles) 1
         }
-
-    for {set index 0} {$index<$par(phasecycles)} {incr index} {
-        set par(ph1) [lindex $par(ph1_list) $index]
-        set par(ph2) [lindex $par(ph2_list) $index]
-        set par(ph3) [lindex $par(ph3_list) $index]
-        set par(ph31) [lindex $par(ph31_list) $index]
 
         # Set shapes for WURST type experiments
         if {[string equal $par(type) "double_echo"] || [string equal $par(type) "CHORUS"]} {
@@ -393,53 +387,25 @@ def create_simpson():  # Write simpson input files
             save_shape $rfsh3 $par(filename).simpson3
         }
 
-            foreach offset_value        $offset_value_list {
-                set par(offset)         $offset_value
+        foreach offset_value        $offset_value_list {
+            set par(offset)         $offset_value
 
-                # Make simulation
-                set f [fsimpson [list [list shift_1_iso $par(offset)]]]
-                # Save final spectra and move them to the corresponding output directories
-                set re [findex $f 1 -re]
-                set im [findex $f 1 -im]
-                # Calculate magnitude of xy projection (of I1p)
-                set xyproj [expr sqrt(($re)**2+($im)**2)]
+            # Make simulation
+            set f [fsimpson [list [list shift_1_iso $par(offset)]]]
+            # Save final spectra and move them to the corresponding output directories
+            set re [expr [findex $f 1 -re]*2.0]
+            set im [expr [findex $f 1 -im]*2.0]
+            set xyproj [expr sqrt(($re)**2+($im)**2)]
 
-                lappend results [format "%s %s %s %s" $par(offset) $re $im $xyproj]
-
-                funload $f
-            }
+            lappend results [format "%s %s %s %s" $par(offset) $re $im $xyproj]
+            funload $f
+        }
     free_all_shapes
-    }
-
-    # Extraction and summation
-    set results_sum {}
-    set n [llength $offset_value_list]
-
-    for {set i 0} {$i < $n} {incr i} {
-        set results_sum_temp {}
-        set results_sum_temp [lmap [lreplace [lrepeat $n b] $i $i a] $results {set a}]
-
-        set re 0.0
-        set im 0.0
-
-        foreach elem $results_sum_temp {
-            set offs     [lindex $elem 0]
-            set re       [expr $re+[lindex $elem 1]]
-            set im       [expr $im+[lindex $elem 2]]
-        }
-        if {[string equal $par(type) "ABSTRUSE"]} {
-            lappend results_sum [format "%s %s %s" $offs [expr $re/2.0] [expr $im/2.0]]
-        } elseif {[string equal $par(type) "SHAPEsingle"]} {
-            lappend results_sum [format "%s %s %s" $offs [expr $re*2.0] [expr $im*2.0]]
-        } else {
-            lappend results_sum [format "%s %s %s" $offs [expr $re/8.0] [expr $im/8.0]]
-        }
-    }
 
     # Write output
         if {[string first "create_shapes_" $par(type)] != 0} {
             set fileID [open $par(filename).out "w"]
-            foreach l $results_sum {
+            foreach l $results {
                 puts $fileID $l
             }
             close $fileID
