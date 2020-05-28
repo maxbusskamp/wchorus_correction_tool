@@ -53,6 +53,7 @@ def create_simpson():  # Write simpson input files
         reset
         matrix set 1 totalcoherence { -1 }
         matrix set 2 totalcoherence { 1 }
+        matrix set 3 totalcoherence { -1 1 }
 
         # Experiment selection done by scanning for the type string
         if {[string equal $par(type) "double_echo"] || [string equal $par(type) "CHORUS"]} {
@@ -69,7 +70,7 @@ def create_simpson():  # Write simpson input files
             pulse_shaped $par(tw1) $rfsh1
             filter 1
             pulse_shaped $par(tw2) $rfsh2
-            filter 2
+            # filter 2
             delay $par(tau1)
         } elseif {[string equal $par(type) "SHAPEsingle"]} {
             pulse_shaped $par(tw1) $rfsh1
