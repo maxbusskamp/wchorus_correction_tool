@@ -106,7 +106,7 @@ def create_simpson():  # Write simpson input files
         global par rfsh1 rfsh2 rfsh3 argc argv
 
         # Read Arguments from commandline
-        if { $argc != 27 } {
+        if { $argc != 30 } {
             puts "Wrong number of Inputs"
             puts "Please try again."
         } else {
@@ -136,7 +136,9 @@ def create_simpson():  # Write simpson input files
             set par(var31)                      [lindex $argv 24]
             set par(var32)                      [lindex $argv 25]
             set par(var33)                      [lindex $argv 26]
-        }
+            set par(phaseoff1)                  [lindex $argv 27]
+            set par(phaseoff2)                  [lindex $argv 28]
+            set par(phaseoff3)                  [lindex $argv 29]}
 
         set par(stepsize)   0.05
 
@@ -179,9 +181,9 @@ def create_simpson():  # Write simpson input files
         }
 
     for {set index 0} {$index<$par(phasecycles)} {incr index} {
-        set par(ph1) [lindex $par(ph1_list) $index]
-        set par(ph2) [lindex $par(ph2_list) $index]
-        set par(ph3) [lindex $par(ph3_list) $index]
+        set par(ph1) [expr $par(phaseoff1) + [lindex $par(ph1_list) $index]]
+        set par(ph2) [expr $par(phaseoff2) + [lindex $par(ph2_list) $index]]
+        set par(ph3) [expr $par(phaseoff3) + [lindex $par(ph3_list) $index]]
         set par(ph31) [lindex $par(ph31_list) $index]
 
         # Set shapes for WURST type experiments
@@ -199,7 +201,7 @@ def create_simpson():  # Write simpson input files
             } elseif {[string equal $par(shape_type) "caWURST"]} {
                 set rfsh1 [list2shape [cawurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
+                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1)  $par(stepsize)]]
             }
 
 
@@ -216,7 +218,7 @@ def create_simpson():  # Write simpson input files
             } elseif {[string equal $par(shape_type) "caWURST"]} {
                 set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
+                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2)  $par(stepsize)]]
             }
 
 
@@ -233,7 +235,7 @@ def create_simpson():  # Write simpson input files
             } elseif {[string equal $par(shape_type) "caWURST"]} {
                 set rfsh3 [list2shape [cawurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(ph3) $par(stepsize)]]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh3 [list2shape [supergaussian $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(ph3) $par(stepsize)]]
+                set rfsh3 [list2shape [supergaussian $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]]
             }
         } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
@@ -268,7 +270,7 @@ def create_simpson():  # Write simpson input files
             } elseif {[string equal $par(shape_type) "caWURST"]} {
                 set rfsh1 [list2shape [cawurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
+                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
             }
 
 
@@ -285,7 +287,7 @@ def create_simpson():  # Write simpson input files
             } elseif {[string equal $par(shape_type) "caWURST"]} {
                 set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
+                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]]
             }
         } elseif {[string equal $par(type) "SHAPEsingle"]} {
             # Set first WURST pulse (excitation)
@@ -299,7 +301,7 @@ def create_simpson():  # Write simpson input files
             } elseif {[string equal $par(shape_type) "tanhpulse"]} {
                 set rfsh1 [list2shape [tanhpulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
+                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
                 set rfsh1 [list2shape [hspulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
             }
@@ -309,20 +311,20 @@ def create_simpson():  # Write simpson input files
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
 
             if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
             }
 
 
@@ -334,20 +336,20 @@ def create_simpson():  # Write simpson input files
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
 
             if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
             }
 
 
@@ -356,20 +358,20 @@ def create_simpson():  # Write simpson input files
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
 
             if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [wurst $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
+                set rfsh_shape2 [wurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22)]]
-                set rfsh_shape2 [tanhpulse $par(tw2) $par(Delta2) 100 $par(var21) $par(var22)]
+                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
+                set rfsh_shape2 [tanhpulse $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [hspulse $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
+                set rfsh_shape2 [hspulse $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [cawurst $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
+                set rfsh_shape2 [cawurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [supergaussian $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
+                set rfsh_shape2 [supergaussian $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
             }
 
             printwave $rfsh_shape1 1
@@ -429,20 +431,20 @@ def create_simpson():  # Write simpson input files
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
 
             if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect)]]
-                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect)]
+                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
+                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
             }
 
 
@@ -451,20 +453,20 @@ def create_simpson():  # Write simpson input files
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
 
             if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [wurst $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
+                set rfsh_shape2 [wurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22)]]
-                set rfsh_shape2 [tanhpulse $par(tw2) $par(Delta2) 100 $par(var21) $par(var22)]
+                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
+                set rfsh_shape2 [tanhpulse $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [hspulse $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
+                set rfsh_shape2 [hspulse $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [cawurst $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
+                set rfsh_shape2 [cawurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21)]]
-                set rfsh_shape2 [supergaussian $par(tw2) $par(Delta2) 100 $par(var21)]
+                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
+                set rfsh_shape2 [supergaussian $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
             }
 
 
@@ -473,20 +475,20 @@ def create_simpson():  # Write simpson input files
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
 
             if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh3 [list2shape [wurst $par(tw3) $par(Delta3) $par(rf3) $par(var31)]]
-                set rfsh_shape3 [wurst $par(tw3) $par(Delta3) 100 $par(var31)]
+                set rfsh3 [list2shape [wurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
+                set rfsh_shape3 [wurst $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
             } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh3 [list2shape [tanhpulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32)]]
-                set rfsh_shape3 [tanhpulse $par(tw3) $par(Delta3) 100 $par(var31) $par(var32)]
+                set rfsh3 [list2shape [tanhpulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(phaseoff3)]]
+                set rfsh_shape3 [tanhpulse $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3)]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh3 [list2shape [hspulse_phasecorr $par(tw3) $par(Delta3) $par(rf3) $par(var31)]]
-                set rfsh_shape3 [hspulse_phasecorr $par(tw3) $par(Delta3) 100 $par(var31)]
+                set rfsh3 [list2shape [hspulse_phasecorr $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
+                set rfsh_shape3 [hspulse_phasecorr $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
             } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh3 [list2shape [cawurst $par(tw3) $par(Delta3) $par(rf3) $par(var31)]]
-                set rfsh_shape3 [cawurst $par(tw3) $par(Delta3) 100 $par(var31)]
+                set rfsh3 [list2shape [cawurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
+                set rfsh_shape3 [cawurst $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
             } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh3 [list2shape [supergaussian $par(tw3) $par(Delta3) $par(rf3) $par(var31)]]
-                set rfsh_shape3 [supergaussian $par(tw3) $par(Delta3) 100 $par(var31)]
+                set rfsh3 [list2shape [supergaussian $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(phaseoff3)]]
+                set rfsh_shape3 [supergaussian $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3)]
             }
 
 
@@ -648,7 +650,7 @@ def create_simpson():  # Write simpson input files
     # Proc for WURST shape calculation
     # Version 1 16.09.2020 by Max Bußkamp:
     ###########################################################################
-    proc supergaussian {tw Delta rfmax N {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
+    proc supergaussian {tw Delta rfmax N G {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
         global par
 
         set pi [expr 4.0*atan(1.0)]
@@ -657,7 +659,7 @@ def create_simpson():  # Write simpson input files
         # t = $stepsize*$i
         for {set i 1} {$i <= $nsteps} {incr i} {
 
-            set amp [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($stepsize*$i)-($tw/2.0))/($tw)),$N))]
+            set amp [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($stepsize*$i)-$G)/($tw)),$N))]
 
             set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset]
             if {$direction} {
@@ -844,7 +846,7 @@ def create_simpson():  # Write simpson input files
     # Proc for WURST shape calculation
     # Version 1 16.09.2020 by Max Bußkamp:
     ###########################################################################
-    proc supergaussian_phasecorr {tw Delta rfmax N filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
+    proc supergaussian_phasecorr {tw Delta rfmax N G filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
         global par
 
         set phasecorr_file  [open $filename_phasecorrect]
@@ -855,10 +857,11 @@ def create_simpson():  # Write simpson input files
 
         # t = $stepsize*$i
         for {set i 1} {$i <= $nsteps} {incr i} {
+            set j [expr $i-1]
 
-            set amp [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($stepsize*$i)-($tw/2.0))/($tw)),$N))]
+            set amp [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($stepsize*$i)-$G)/($tw)),$N))]
 
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset+[lindex $phasecorr_list $i 0]]
+            set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset+[lindex $phasecorr_list $j 0]]
             if {$direction} {
                 set ph [expr fmod($ph,360)]
             } else {
@@ -1174,6 +1177,9 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
     global var31
     global var32
     global var33
+    global phaseoff1
+    global phaseoff2
+    global phaseoff3
 
     run(['simpson',
             'phasecorrection_liquid.tcl',
@@ -1202,7 +1208,10 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
             shape_type,
             var31,
             var32,
-            var33])
+            var33,
+            phaseoff1,
+            phaseoff2,
+            phaseoff3])
 
     # filename_phasecorr = glob.glob('*.out')[0]
     filename_phasecorr = filename + '.out'
@@ -1282,7 +1291,10 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
         shape_type,
         var31,
         var32,
-        var33])
+        var33,
+        phaseoff1,
+        phaseoff2,
+        phaseoff3])
 
     run(['rm', '-f', 'phasecorrection_liquid.tcl'])
     # run(['rm', '-f', filename_phasecorr])
@@ -1322,11 +1334,24 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                 [sg.Text('N/Zeta/Beta:'), sg.Text(size=(10,1), key='var11_out')],
                 [sg.Input(key='var11', size=(10,1))],
                 [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var12_out')],
-                [sg.Input(key='var12', size=(10,1))]]
-        pulse2 = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
-                  [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
-                  [sg.Text('Parameter 1 of P2:'), sg.Text(size=(10,1), key='var21_out')],
-                  [sg.Text('Parameter 2 of P2:'), sg.Text(size=(10,1), key='var22_out')]]
+                [sg.Input(key='var12', size=(10,1))],
+                [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
+                [sg.Input(key='phaseoff1', size=(10,1))]]
+        if(shape_type == 'supergaussian'):
+            pulse2 = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
+                    [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
+                    [sg.Text('Parameter 1 of P2:'), sg.Text(size=(10,1), key='var21_out')],
+                    [sg.Text('Parameter 2 of P2:'), sg.Text(size=(10,1), key='var22_out')],
+                    [sg.Input(key='var22', size=(10,1))],
+                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
+                    [sg.Input(key='phaseoff2', size=(10,1))]]
+        else:
+            pulse2 = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
+                    [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
+                    [sg.Text('Parameter 1 of P2:'), sg.Text(size=(10,1), key='var21_out')],
+                    [sg.Text('Parameter 2 of P2:'), sg.Text(size=(10,1), key='var22_out')],
+                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
+                    [sg.Input(key='phaseoff2', size=(10,1))]]
         delay  = [[sg.Text('Duration of D (us):'), sg.Text(size=(10,1), key='tau2_out')]]
         pulse3 = [[sg.Text('Duration of P3 (us):'), sg.Text(size=(10,1), key='tw3_out')],
                 [sg.Input(key='tw3', size=(15,1))],
@@ -1336,7 +1361,9 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                 [sg.Text('N/Zeta/Beta:'), sg.Text(size=(10,1), key='var31_out')],
                 [sg.Input(key='var31', size=(10,1))],
                 [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var32_out')],
-                [sg.Input(key='var32', size=(10,1))]]
+                [sg.Input(key='var32', size=(10,1))],
+                [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff3_out')],
+                [sg.Input(key='phaseoff3', size=(10,1))]]
 
         layout = [[sg.Text('Define Pulse Parameter here, then click start Simulation'), sg.Text(size=(15,1), key='text1_out')],
                 [sg.Text('Shapes are saved in this folder and can be used by Bruker Spectrometer'), sg.Text(size=(15,1), key='text3_out')],
@@ -1363,7 +1390,9 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var12_out')],
                    [sg.Input(key='var12', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
-                   [sg.Input(key='delta1', size=(15,1))]]
+                   [sg.Input(key='delta1', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
+                   [sg.Input(key='phaseoff1', size=(10,1))]]
         delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')],
                    [sg.Input(default_text='0', key='tau1', size=(15,1))]]
         pulse2  = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
@@ -1376,7 +1405,9 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var22_out')],
                    [sg.Input(key='var22', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')],
-                   [sg.Input(key='delta2', size=(15,1))]]
+                   [sg.Input(key='delta2', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
+                   [sg.Input(key='phaseoff2', size=(10,1))]]
         delay2  = [[sg.Text('Duration of D2 (us):'), sg.Text(size=(10,1), key='tau2_out')],
                    [sg.Input(default_text='0', key='tau2', size=(15,1))]]
         pulse3  = [[sg.Text('Duration of P3 (us):'), sg.Text(size=(10,1), key='tw3_out')],
@@ -1389,7 +1420,9 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var32_out')],
                    [sg.Input(key='var32', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta3_out')],
-                   [sg.Input(key='delta3', size=(15,1))]]
+                   [sg.Input(key='delta3', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
+                   [sg.Input(key='phaseoff2', size=(10,1))]]
         delay3  = [[sg.Text('Duration of D3 (us):'), sg.Text(size=(10,1), key='tau3_out')],
                    [sg.Input(default_text='0', key='tau3', size=(15,1))]]
 
@@ -1418,6 +1451,8 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Input(key='var12', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
                    [sg.Input(key='delta1', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
+                   [sg.Input(key='phaseoff1', size=(10,1))],
                    [sg.Text('loadshape:'), sg.Text(size=(10,1), key='var13_out')],
                    [sg.Input(default_text='./shape1', key='var13', size=(10,1))]]
         delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')],
@@ -1433,6 +1468,8 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Input(key='var22', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')],
                    [sg.Input(key='delta2', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
+                   [sg.Input(key='phaseoff2', size=(10,1))],
                    [sg.Text('loadshape:'), sg.Text(size=(10,1), key='var23_out')],
                    [sg.Input(default_text='./shape2', key='var23', size=(10,1))]]
         delay2  = [[sg.Text('Duration of D2 (us):'), sg.Text(size=(10,1), key='tau2_out')],
@@ -1448,6 +1485,8 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Input(key='var32', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta3_out')],
                    [sg.Input(key='delta3', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff3_out')],
+                   [sg.Input(key='phaseoff3', size=(10,1))],
                    [sg.Text('loadshape:'), sg.Text(size=(10,1), key='var33_out')],
                    [sg.Input(default_text='./shape3', key='var33', size=(10,1))]]
         delay3  = [[sg.Text('Duration of D3 (us):'), sg.Text(size=(10,1), key='tau3_out')],
@@ -1477,13 +1516,17 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var12_out')],
                    [sg.Input(key='var12', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
-                   [sg.Input(key='delta1', size=(15,1))]]
+                   [sg.Input(key='delta1', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
+                   [sg.Input(key='phaseoff1', size=(10,1))]]
         pulse2  = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
                    [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
                    [sg.Input(default_text='1.0', key='rffactor2', size=(10,1))],
                    [sg.Text('Parameter 1 of P2:'), sg.Text(size=(10,1), key='var21_out')],
                    [sg.Text('Parameter 2 of P2:'), sg.Text(size=(10,1), key='var22_out')],
-                   [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')]]
+                   [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
+                   [sg.Input(key='phaseoff2', size=(10,1))]]
         delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')]]
 
         layout  = [[sg.Text('Define Pulse Parameter here, then click start Simulation'), sg.Text(size=(15,1), key='text1_out')],
@@ -1510,7 +1553,9 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var12_out')],
                    [sg.Input(key='var12', size=(10,1))],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
-                   [sg.Input(key='delta1', size=(15,1))]]
+                   [sg.Input(key='delta1', size=(15,1))],
+                   [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
+                   [sg.Input(key='phaseoff1', size=(10,1))]]
 
         layout  = [[sg.Text('Define Pulse Parameter here, then click start Simulation'), sg.Text(size=(15,1), key='text1_out')],
                    [sg.Text('Shapes are saved in this folder and can be used by Bruker Spectrometer'), sg.Text(size=(15,1), key='text3_out')],
@@ -1560,6 +1605,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
     global var31
     global var32
     global var33
+    global phaseoff1
+    global phaseoff2
+    global phaseoff3
 
     if(exp_type == 'CHORUS') or (exp_type == 'CHORUS_cycled'):  # define CHORUS parameter
 
@@ -1578,9 +1626,19 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         tau2         = '{:.1f}'.format(float(tw1)/2.0)
         tw2          = '{:.1f}'.format(float(tau2)+float(tw3))
         rffactor2    = rffactor3
-        var21           = var31
-        var22           = var32
+        if(shape_type == 'supergaussian'):
+            var21           = var31
+            var22           = simulation_values['var22']
+        else:
+            var21           = var31
+            var22           = var32
+        phaseoff1       = simulation_values['phaseoff1']
+        phaseoff2       = simulation_values['phaseoff2']
+        phaseoff3       = simulation_values['phaseoff3']
 
+        simulation_window['phaseoff1_out'].update(simulation_values['phaseoff1'])
+        simulation_window['phaseoff2_out'].update(simulation_values['phaseoff2'])
+        simulation_window['phaseoff3_out'].update(simulation_values['phaseoff3'])
         simulation_window['delta1_out'].update(simulation_values['delta1'])
         simulation_window['tw1_out'].update(simulation_values['tw1'])
         simulation_window['tw2_out'].update(tw2)
@@ -1591,8 +1649,12 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         simulation_window['tau2_out'].update(tau2)
         simulation_window['var11_out'].update(simulation_values['var11'])
         simulation_window['var12_out'].update(simulation_values['var12'])
-        simulation_window['var21_out'].update(var21)
-        simulation_window['var22_out'].update(var22)
+        if(shape_type == 'supergaussian'):
+            simulation_window['var21_out'].update(var21)
+            simulation_window['var22_out'].update(simulation_values['var22'])
+        else:
+            simulation_window['var21_out'].update(var21)
+            simulation_window['var22_out'].update(var22)
         simulation_window['var31_out'].update(simulation_values['var31'])
         simulation_window['var32_out'].update(simulation_values['var32'])
         simulation_window['ss_offset_out'].update(simulation_values['ss_offset'])
@@ -1609,6 +1671,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
                         f"rffactor3 = {rffactor3} \n"
+                        f"phaseoff1 = {phaseoff1} \n"
+                        f"phaseoff2 = {phaseoff2} \n"
+                        f"phaseoff3 = {phaseoff3} \n"
                         f"tau2 = {tau2} \n"
                         f"Parameter: \n"
                         f"If shape_type is WURST: \n"
@@ -1641,6 +1706,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         simulation_window['var31_out'].update(simulation_values['var31'])
         simulation_window['var32_out'].update(simulation_values['var32'])
         simulation_window['ss_offset_out'].update(simulation_values['ss_offset'])
+        simulation_window['phaseoff1_out'].update(simulation_values['phaseoff1'])
+        simulation_window['phaseoff2_out'].update(simulation_values['phaseoff2'])
+        simulation_window['phaseoff3_out'].update(simulation_values['phaseoff3'])
 
         delta1      = simulation_values['delta1']
         delta2      = simulation_values['delta2']
@@ -1661,7 +1729,10 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         var31           = simulation_values['var31']
         var32           = simulation_values['var32']
         ss_offset    = simulation_values['ss_offset']
-        
+        phaseoff1       = simulation_values['phaseoff1']
+        phaseoff2       = simulation_values['phaseoff2']
+        phaseoff3       = simulation_values['phaseoff3']
+
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
                         f"Offset Stepsize = {ss_offset} \n"
@@ -1674,6 +1745,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
                         f"rffactor3 = {rffactor3} \n"
+                        f"phaseoff1 = {phaseoff1} \n"
+                        f"phaseoff2 = {phaseoff2} \n"
+                        f"phaseoff3 = {phaseoff3} \n"
                         f"tau1 = {tau1} \n"
                         f"tau2 = {tau2} \n"
                         f"tau3 = {tau3} \n"
@@ -1711,6 +1785,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         simulation_window['var32_out'].update(simulation_values['var32'])
         simulation_window['var33_out'].update(simulation_values['var33'])
         simulation_window['ss_offset_out'].update(simulation_values['ss_offset'])
+        simulation_window['phaseoff1_out'].update(simulation_values['phaseoff1'])
+        simulation_window['phaseoff2_out'].update(simulation_values['phaseoff2'])
+        simulation_window['phaseoff3_out'].update(simulation_values['phaseoff3'])
 
         delta1      = simulation_values['delta1']
         delta2      = simulation_values['delta2']
@@ -1734,7 +1811,10 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         var32           = simulation_values['var32']
         var33           = simulation_values['var33']
         ss_offset    = simulation_values['ss_offset']
-        
+        phaseoff1       = simulation_values['phaseoff1']
+        phaseoff2       = simulation_values['phaseoff2']
+        phaseoff3       = simulation_values['phaseoff3']
+
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
                         f"Offset Stepsize = {ss_offset} \n"
@@ -1747,6 +1827,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
                         f"rffactor3 = {rffactor3} \n"
+                        f"phaseoff1 = {phaseoff1} \n"
+                        f"phaseoff2 = {phaseoff2} \n"
+                        f"phaseoff3 = {phaseoff3} \n"
                         f"tau1 = {tau1} \n"
                         f"tau2 = {tau2} \n"
                         f"tau3 = {tau3} \n"
@@ -1771,6 +1854,7 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         simulation_window['var11_out'].update(simulation_values['var11'])
         simulation_window['var12_out'].update(simulation_values['var12'])
         simulation_window['ss_offset_out'].update(simulation_values['ss_offset'])
+        simulation_window['phaseoff1_out'].update(simulation_values['phaseoff1'])
 
         delta1      = simulation_values['delta1']
         tw1         = simulation_values['tw1']
@@ -1778,13 +1862,15 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         var11           = simulation_values['var11']
         var12           = simulation_values['var12']
         ss_offset    = simulation_values['ss_offset']
-        
+        phaseoff1       = simulation_values['phaseoff1']
+
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
                         f"Offset Stepsize = {ss_offset} \n"
                         f"delta1 = {delta1} \n"
                         f"tw1 = {tw1} \n"
                         f"rffactor1 = {rffactor1} \n"
+                        f"phaseoff1 = {phaseoff1} \n"
                         f"Parameter: \n"
                         f"If shape_type is WURST: \n"
                         f"varX1 is N and varX2 is none \n"
@@ -1805,6 +1891,8 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         var21           = var11
         var22           = var12
         ss_offset    = simulation_values['ss_offset']
+        phaseoff1       = simulation_values['phaseoff1']
+        phaseoff2       = simulation_values['phaseoff2']
 
         simulation_window['delta1_out'].update(simulation_values['delta1'])
         simulation_window['delta2_out'].update(delta2)
@@ -1818,6 +1906,8 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         simulation_window['var21_out'].update(var21)
         simulation_window['var22_out'].update(var22)
         simulation_window['ss_offset_out'].update(simulation_window['ss_offset'])
+        simulation_window['phaseoff1_out'].update(simulation_values['phaseoff1'])
+        simulation_window['phaseoff2_out'].update(simulation_values['phaseoff2'])
 
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
@@ -1828,6 +1918,8 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"tw2 = {tw2} \n"
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
+                        f"phaseoff1 = {phaseoff1} \n"
+                        f"phaseoff2 = {phaseoff2} \n"
                         f"tau1 = {tau1} \n"
                         f"Parameter: \n"
                         f"If shape_type is WURST: \n"
@@ -1868,7 +1960,9 @@ var23        = '0'
 var31        = '0'
 var32        = '0'
 var33        = '0'
-
+phaseoff1    = '0'
+phaseoff2    = '0'
+phaseoff3    = '0'
 # Create Sequence Selection Window
 sequence_selection = sg.Window('Phasecorrection Tool', selection_layout(), grab_anywhere=True)
 
