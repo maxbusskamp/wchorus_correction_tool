@@ -244,18 +244,21 @@ def create_simpson():  # Write simpson input files
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
             set rfsh1 [load_shape $par(var13)]
             shape_manipulate $rfsh1 -ampl {$ampl*$par(rf1)}
+            shape_manipulate $rfsh1 -phase {$phase+$par(ph1)}
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
             set rfsh2 [load_shape $par(var23)]
             shape_manipulate $rfsh2 -ampl {$ampl*$par(rf2)}
+            shape_manipulate $rfsh2 -phase {$phase+$par(ph2)}
 
             # Set third WURST pulse (refocussing)
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
             set rfsh3 [load_shape $par(var33)]
             shape_manipulate $rfsh3 -ampl {$ampl*$par(rf3)}
+            shape_manipulate $rfsh3 -phase {$phase+$par(ph3)}
         } elseif {[string equal $par(type) "double_chirp"]} {
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
@@ -390,10 +393,11 @@ def create_simpson():  # Write simpson input files
 
             set rfsh1 [load_shape $par(var13)]
             shape_manipulate $rfsh1 -ampl {$ampl*$par(rf1)}
+            shape_manipulate $rfsh1 -phase {$phase+$par(phaseoff1)}
 
             set rfsh_shape1 [load_shape $par(var13)]
             shape_manipulate $rfsh_shape1 -ampl {$ampl*100}
-
+            shape_manipulate $rfsh1 -phase {$phase+$par(phaseoff1)}
             shape_manipulate $rfsh1 -phase {$phase-[lindex $phasecorr_list $i-1]}
             shape_manipulate $rfsh_shape1 -phase {$phase-[lindex $phasecorr_list $i-1]}
             set rfsh_shape1 [shape2list $rfsh_shape1]
@@ -404,9 +408,11 @@ def create_simpson():  # Write simpson input files
 
             set rfsh2 [load_shape $par(var23)]
             shape_manipulate $rfsh2 -ampl {$ampl*$par(rf2)}
+            shape_manipulate $rfsh2 -phase {$phase+$par(phaseoff2)}
 
             set rfsh_shape2 [load_shape $par(var23)]
             shape_manipulate $rfsh_shape2 -ampl {$ampl*100}
+            shape_manipulate $rfsh2 -phase {$phase+$par(phaseoff2)}
             set rfsh_shape2 [shape2list $rfsh_shape2]
 
             # Set third WURST pulse (refocussing)
@@ -414,8 +420,11 @@ def create_simpson():  # Write simpson input files
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
             set rfsh3 [load_shape $par(var33)]
             shape_manipulate $rfsh3 -ampl {$ampl*$par(rf3)}
+            shape_manipulate $rfsh2 -phase {$phase+$par(phaseoff2)}
+
             set rfsh_shape3 [load_shape $par(var33)]
             shape_manipulate $rfsh_shape3 -ampl {$ampl*100}
+            shape_manipulate $rfsh2 -phase {$phase+$par(phaseoff2)}
             set rfsh_shape3 [shape2list $rfsh_shape3]
 
             printwave $rfsh_shape1 1
@@ -481,8 +490,8 @@ def create_simpson():  # Write simpson input files
                 set rfsh3 [list2shape [tanhpulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(phaseoff3)]]
                 set rfsh_shape3 [tanhpulse $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3)]
             } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh3 [list2shape [hspulse_phasecorr $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
-                set rfsh_shape3 [hspulse_phasecorr $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
+                set rfsh3 [list2shape [hspulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
+                set rfsh_shape3 [hspulse $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
             } elseif {[string equal $par(shape_type) "caWURST"]} {
                 set rfsh3 [list2shape [cawurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
                 set rfsh_shape3 [cawurst $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
@@ -575,7 +584,7 @@ def create_simpson():  # Write simpson input files
     #   - Added rfmax to input variables
     #   - Added default values for stepsize, direction and offset
     ###########################################################################
-    proc cawurst {tw Delta rfmax N {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
+    proc cawurst {tw Delta rfmax N {phaseoffset 0.0} {stepsize 0.05} {direction -1} {offset 0.0}} {
         global par
 
         #Variables
@@ -598,6 +607,40 @@ def create_simpson():  # Write simpson input files
         set w0 			0
         set k 			[expr 1.0e-6*$rate]
 
+        #Calculate frequency correction factor
+        set freq_prep_b 0.0
+        set phase_prep1	0.0
+        set freq_max 0.0
+        for {set i [expr round($nsp/2)+1]} {$i <= $nsp} {incr i} {
+            set time				[expr $stepsize*$i]
+            set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
+            lappend amplist	$amp_prep
+            
+            set freq_prep 	[expr (1.0e-6*$stepsize*($amp_prep**2/$q0)+$freq_prep_b)]
+            lappend freqlist $freq_prep
+            if {$freq_prep > $freq_max} {
+                set freq_max $freq_prep
+            }
+
+            set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
+            set phase_prep 	[expr fmod($phase_prep1*360+$phaseoffset,360)]
+            lappend phaselist $phase_prep
+            
+            set freq_prep_b $freq_prep
+        }
+
+        set sweepfactor [expr $sweep*1e6/2.0/$freq_max]
+
+        unset time
+        unset amp_prep
+        unset amplist
+        unset freq_prep
+        unset freqlist
+        unset phase_prep1
+        unset phase_prep
+        unset phaselist
+        unset freq_prep_b
+        
         #Calculate amplitude and frequency for positive offset values 
         set freq_prep_b 0.0
         set phase_prep1	0.0
@@ -606,7 +649,7 @@ def create_simpson():  # Write simpson input files
             set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
             lappend amplist	$amp_prep
             
-            set freq_prep 	[expr (1.0e-6*$stepsize*($amp_prep**2/$q0)+$freq_prep_b)]
+            set freq_prep 	[expr (1.0e-6*$stepsize*$sweepfactor*($amp_prep**2/$q0)+$freq_prep_b)]
             lappend freqlist $freq_prep
 
             set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
@@ -663,9 +706,9 @@ def create_simpson():  # Write simpson input files
 
             set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset]
             if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
                 set ph [expr fmod(-$ph,360)+360.0]
+            } else {
+                set ph [expr fmod($ph,360)]
             }
             lappend wavelist [format "%6.2f %6.2f" $amp $ph]
         }
@@ -721,9 +764,9 @@ def create_simpson():  # Write simpson input files
             }
             set ph [expr ($phi_max-(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$stepsize/1000000.0)/($tw/1000000.0))/cos($kappa)))*180/$pi+$phaseoffset]
             if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
                 set ph [expr fmod(-$ph,360)+360.0]
+            } else {
+                set ph [expr fmod($ph,360)]
             }
 
             lappend wavelist [format "%6.2f %6.2f" $amp $ph]
@@ -747,9 +790,9 @@ def create_simpson():  # Write simpson input files
             set ph [expr $offset+$phi0*log($x)+$phaseoffset]
 
             if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
                 set ph [expr fmod(-$ph,360)+360.0]
+            } else {
+                set ph [expr fmod($ph,360)]
             }
 
             lappend wavelist [format "%6.2f %6.2f" $amp $ph]
@@ -792,6 +835,40 @@ def create_simpson():  # Write simpson input files
         set w0 			0
         set k 			[expr 1.0e-6*$rate]
 
+        #Calculate frequency correction factor
+        set freq_prep_b 0.0
+        set phase_prep1	0.0
+        set freq_max 0.0
+        for {set i [expr round($nsp/2)+1]} {$i <= $nsp} {incr i} {
+            set time				[expr $stepsize*$i]
+            set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
+            lappend amplist	$amp_prep
+            
+            set freq_prep 	[expr (1.0e-6*$stepsize*($amp_prep**2/$q0)+$freq_prep_b)]
+            lappend freqlist $freq_prep
+            if {$freq_prep > $freq_max} {
+                set freq_max $freq_prep
+            }
+
+            set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
+            set phase_prep 	[expr fmod($phase_prep1*360+$phaseoffset,360)]
+            lappend phaselist $phase_prep
+            
+            set freq_prep_b $freq_prep
+        }
+
+        set sweepfactor [expr $sweep*1e6/2.0/$freq_max]
+
+        unset time
+        unset amp_prep
+        unset amplist
+        unset freq_prep
+        unset freqlist
+        unset phase_prep1
+        unset phase_prep
+        unset phaselist
+        unset freq_prep_b
+
         #Calculate amplitude and frequency for positive offset values 
         set freq_prep_b 0.0
         set phase_prep1	0.0
@@ -800,7 +877,7 @@ def create_simpson():  # Write simpson input files
             set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
             lappend amplist	$amp_prep
             
-            set freq_prep 	[expr (1.0e-6*$stepsize*($amp_prep**2/$q0)+$freq_prep_b)]
+            set freq_prep 	[expr (1.0e-6*$stepsize*$sweepfactor*($amp_prep**2/$q0)+$freq_prep_b)]
             lappend freqlist $freq_prep
             
             set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
@@ -833,7 +910,7 @@ def create_simpson():  # Write simpson input files
             set amp			[lindex $amplist $index]
             set freq_help 	[lindex $freqlist $index]
             set freq 		[expr $help*$freq_help]
-            set phase		[expr fmod([lindex $phaselist $index]+[lindex $phasecorr_list $index2 0],360)]
+            set phase		[expr fmod([lindex $phaselist $index]-[lindex $phasecorr_list $index2 0],360)]
 
             lappend wavelist [format "%6.2f %6.2f" $amp $phase]
             incr index2
@@ -863,9 +940,9 @@ def create_simpson():  # Write simpson input files
 
             set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset+[lindex $phasecorr_list $j 0]]
             if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
                 set ph [expr fmod(-$ph,360)+360.0]
+            } else {
+                set ph [expr fmod($ph,360)]
             }
             lappend wavelist [format "%6.2f %6.2f" $amp $ph]
         }
@@ -957,9 +1034,9 @@ def create_simpson():  # Write simpson input files
             set ph [expr $offset+$phi0*log($x)+$phaseoffset+[lindex $phasecorr_list $j 0]]
 
             if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
                 set ph [expr fmod(-$ph,360)+360.0]
+            } else {
+                set ph [expr fmod($ph,360)]
             }
 
             lappend wavelist [format "%6.2f %6.2f" $amp $ph]
@@ -1336,7 +1413,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                 [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var12_out')],
                 [sg.Input(key='var12', size=(10,1))],
                 [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
-                [sg.Input(key='phaseoff1', size=(10,1))]]
+                [sg.Input(default_text='0.0', key='phaseoff1', size=(10,1))]]
         if(shape_type == 'supergaussian'):
             pulse2 = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
                     [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
@@ -1344,14 +1421,14 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                     [sg.Text('Parameter 2 of P2:'), sg.Text(size=(10,1), key='var22_out')],
                     [sg.Input(key='var22', size=(10,1))],
                     [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
-                    [sg.Input(key='phaseoff2', size=(10,1))]]
+                    [sg.Input(default_text='0.0', key='phaseoff2', size=(10,1))]]
         else:
             pulse2 = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
                     [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
                     [sg.Text('Parameter 1 of P2:'), sg.Text(size=(10,1), key='var21_out')],
                     [sg.Text('Parameter 2 of P2:'), sg.Text(size=(10,1), key='var22_out')],
                     [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
-                    [sg.Input(key='phaseoff2', size=(10,1))]]
+                    [sg.Input(default_text='0.0', key='phaseoff2', size=(10,1))]]
         delay  = [[sg.Text('Duration of D (us):'), sg.Text(size=(10,1), key='tau2_out')]]
         pulse3 = [[sg.Text('Duration of P3 (us):'), sg.Text(size=(10,1), key='tw3_out')],
                 [sg.Input(key='tw3', size=(15,1))],
@@ -1363,7 +1440,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                 [sg.Text('none/tan_kappa/none:'), sg.Text(size=(10,1), key='var32_out')],
                 [sg.Input(key='var32', size=(10,1))],
                 [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff3_out')],
-                [sg.Input(key='phaseoff3', size=(10,1))]]
+                [sg.Input(default_text='0.0', key='phaseoff3', size=(10,1))]]
 
         layout = [[sg.Text('Define Pulse Parameter here, then click start Simulation'), sg.Text(size=(15,1), key='text1_out')],
                 [sg.Text('Shapes are saved in this folder and can be used by Bruker Spectrometer'), sg.Text(size=(15,1), key='text3_out')],
@@ -1392,7 +1469,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
                    [sg.Input(key='delta1', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
-                   [sg.Input(key='phaseoff1', size=(10,1))]]
+                   [sg.Input(default_text='0.0', key='phaseoff1', size=(10,1))]]
         delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')],
                    [sg.Input(default_text='0', key='tau1', size=(15,1))]]
         pulse2  = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
@@ -1407,7 +1484,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')],
                    [sg.Input(key='delta2', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
-                   [sg.Input(key='phaseoff2', size=(10,1))]]
+                   [sg.Input(default_text='0.0', key='phaseoff2', size=(10,1))]]
         delay2  = [[sg.Text('Duration of D2 (us):'), sg.Text(size=(10,1), key='tau2_out')],
                    [sg.Input(default_text='0', key='tau2', size=(15,1))]]
         pulse3  = [[sg.Text('Duration of P3 (us):'), sg.Text(size=(10,1), key='tw3_out')],
@@ -1422,7 +1499,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta3_out')],
                    [sg.Input(key='delta3', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
-                   [sg.Input(key='phaseoff2', size=(10,1))]]
+                   [sg.Input(default_text='0.0', key='phaseoff2', size=(10,1))]]
         delay3  = [[sg.Text('Duration of D3 (us):'), sg.Text(size=(10,1), key='tau3_out')],
                    [sg.Input(default_text='0', key='tau3', size=(15,1))]]
 
@@ -1452,7 +1529,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
                    [sg.Input(key='delta1', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
-                   [sg.Input(key='phaseoff1', size=(10,1))],
+                   [sg.Input(default_text='0.0', key='phaseoff1', size=(10,1))],
                    [sg.Text('loadshape:'), sg.Text(size=(10,1), key='var13_out')],
                    [sg.Input(default_text='./shape1', key='var13', size=(10,1))]]
         delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')],
@@ -1469,7 +1546,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')],
                    [sg.Input(key='delta2', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
-                   [sg.Input(key='phaseoff2', size=(10,1))],
+                   [sg.Input(default_text='0.0', key='phaseoff2', size=(10,1))],
                    [sg.Text('loadshape:'), sg.Text(size=(10,1), key='var23_out')],
                    [sg.Input(default_text='./shape2', key='var23', size=(10,1))]]
         delay2  = [[sg.Text('Duration of D2 (us):'), sg.Text(size=(10,1), key='tau2_out')],
@@ -1486,7 +1563,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta3_out')],
                    [sg.Input(key='delta3', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff3_out')],
-                   [sg.Input(key='phaseoff3', size=(10,1))],
+                   [sg.Input(default_text='0.0', key='phaseoff3', size=(10,1))],
                    [sg.Text('loadshape:'), sg.Text(size=(10,1), key='var33_out')],
                    [sg.Input(default_text='./shape3', key='var33', size=(10,1))]]
         delay3  = [[sg.Text('Duration of D3 (us):'), sg.Text(size=(10,1), key='tau3_out')],
@@ -1518,7 +1595,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
                    [sg.Input(key='delta1', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
-                   [sg.Input(key='phaseoff1', size=(10,1))]]
+                   [sg.Input(default_text='0.0', key='phaseoff1', size=(10,1))]]
         pulse2  = [[sg.Text('Duration of P2 (us):'), sg.Text(size=(10,1), key='tw2_out')],
                    [sg.Text('RF-Factor of P2:'), sg.Text(size=(10,1), key='rffactor2_out')],
                    [sg.Input(default_text='1.0', key='rffactor2', size=(10,1))],
@@ -1526,7 +1603,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Parameter 2 of P2:'), sg.Text(size=(10,1), key='var22_out')],
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta2_out')],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff2_out')],
-                   [sg.Input(key='phaseoff2', size=(10,1))]]
+                   [sg.Input(default_text='0.0', key='phaseoff2', size=(10,1))]]
         delay1  = [[sg.Text('Duration of D1 (us):'), sg.Text(size=(10,1), key='tau1_out')]]
 
         layout  = [[sg.Text('Define Pulse Parameter here, then click start Simulation'), sg.Text(size=(15,1), key='text1_out')],
@@ -1555,7 +1632,7 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                    [sg.Text('Sweepwidth (kHz):'), sg.Text(size=(15,1), key='delta1_out')],
                    [sg.Input(key='delta1', size=(15,1))],
                    [sg.Text('Additional Phase Offset:'), sg.Text(size=(10,1), key='phaseoff1_out')],
-                   [sg.Input(key='phaseoff1', size=(10,1))]]
+                   [sg.Input(default_text='0.0', key='phaseoff1', size=(10,1))]]
 
         layout  = [[sg.Text('Define Pulse Parameter here, then click start Simulation'), sg.Text(size=(15,1), key='text1_out')],
                    [sg.Text('Shapes are saved in this folder and can be used by Bruker Spectrometer'), sg.Text(size=(15,1), key='text3_out')],
