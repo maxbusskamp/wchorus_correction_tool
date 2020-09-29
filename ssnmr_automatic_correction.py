@@ -31,15 +31,15 @@ def create_simpson():  # Write simpson input files
     simpson_input = """spinsys {
         channels 1H
         nuclei 1H
-        shift 1 0 0 0.0 0 0 0
+        shift 1 0p -200p 1.0 0 0 0
     }
 
     par {
         method           direct
         proton_frequency 500e6
-        spin_rate        0
-        crystal_file     alpha0beta0
-        gamma_angles     1
+        spin_rate        25000
+        crystal_file     rep10
+        gamma_angles     23
         np               2
         start_operator   Inz
         detect_operator  Inp
