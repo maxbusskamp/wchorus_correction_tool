@@ -75,7 +75,7 @@ proc pulseq {} {
 proc main {} {
     global par rfsh1 rfsh2 rfsh3 argc argv
 
-    lappend ::auto_path ./src/
+    lappend ::auto_path ../../src/
     if {![namespace exists shapetools_liquid]} {
         package require shapetools_liquid
         namespace import shapetools_liquid::*
