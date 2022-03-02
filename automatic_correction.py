@@ -29,9 +29,9 @@ sg.theme('DarkBlue')
 def create_simpson():  # Write simpson input files
     simpson_inputfile = open('phasecorrection_liquid.tcl', 'w')
     simpson_input = """spinsys {
-        channels 1H
-        nuclei 1H
-        shift 1 0 0 0.0 0 0 0
+            channels 1H
+            nuclei 1H
+            shift 1 0 0 0.0 0 0 0
     }
 
     par {
@@ -191,52 +191,17 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1)  $par(stepsize)]]
-            }
-
+            set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2)  $par(stepsize)]]
-            }
-
+            set rfsh2 [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]
 
             # Set third WURST pulse (refocussing)
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh3 [list2shape [wurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(ph3) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh3 [list2shape [tanhpulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh3 [list2shape [hspulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(ph3) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh3 [list2shape [cawurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(ph3) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh3 [list2shape [supergaussian $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]]
-            }
+            set rfsh3 [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]
         } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
             # Set first WURST pulse (excitation)
@@ -263,73 +228,24 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
-            }
-
+            set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
+            set rfsh2 [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]
 
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(ph2) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]]
-            }
         } elseif {[string equal $par(type) "SHAPEsingle"]} {
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(ph1) $par(stepsize)]]
-            }
+            set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]
         } elseif {[string equal $par(type) "create_shapes_SHAPEsingle"]} {
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
-            }
-
+            set rfsh1 [pulsegen_corr $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
+            set rfsh_shape1 [pulsegen_corr_list $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
 
             printwave $rfsh_shape1 1
             save_shape $rfsh1 $par(filename).simpson1
@@ -337,45 +253,14 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
-            }
-
+            set rfsh1 [pulsegen_corr $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
+            set rfsh_shape1 [pulsegen_corr_list $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
-                set rfsh_shape2 [wurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
-                set rfsh_shape2 [tanhpulse $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
-                set rfsh_shape2 [hspulse $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
-                set rfsh_shape2 [cawurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
-                set rfsh_shape2 [supergaussian $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
-            }
+            set rfsh2 [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]
+            set rfsh2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
 
             printwave $rfsh_shape1 1
             printwave $rfsh_shape2 2
@@ -383,7 +268,6 @@ def create_simpson():  # Write simpson input files
             save_shape $rfsh1 $par(filename).simpson1
             save_shape $rfsh2 $par(filename).simpson2
         } elseif {[string equal $par(type) "create_shapes_loadshape_double_echo"]} {
-
 
             set phasecorr_list [listFromFile $par(filename_phasecorrect)]
 
@@ -438,50 +322,20 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [list2shape [wurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [wurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh1 [list2shape [tanhpulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [tanhpulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh1 [list2shape [hspulse_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [hspulse_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh1 [list2shape [cawurst_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [cawurst_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(filename_phasecorrect) $par(phaseoff1)]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh1 [list2shape [supergaussian_phasecorr $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]]
-                set rfsh_shape1 [supergaussian_phasecorr $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(filename_phasecorrect) $par(phaseoff1)]
-            }
-
+            set rfsh1 [pulsegen_corr $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
+            set rfsh_shape1 [pulsegen_corr_list $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh2 [list2shape [wurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
-                set rfsh_shape2 [wurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh2 [list2shape [tanhpulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
-                set rfsh_shape2 [tanhpulse $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh2 [list2shape [hspulse $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
-                set rfsh_shape2 [hspulse $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh2 [list2shape [cawurst $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(phaseoff2)]]
-                set rfsh_shape2 [cawurst $par(tw2) $par(Delta2) 100 $par(var21) $par(phaseoff2)]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh2 [list2shape [supergaussian $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2)]]
-                set rfsh_shape2 [supergaussian $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2)]
-            }
-
+            set rfsh2 [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]
+            set rfsh_shape2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
 
             # Set third WURST pulse (refocussing)
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
+            set rfsh3 [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf2) $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]
+            set rfsh_shape3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]]
 
             if {[string equal $par(shape_type) "WURST"]} {
                 set rfsh3 [list2shape [wurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
@@ -562,6 +416,76 @@ def create_simpson():  # Write simpson input files
             }
             close $fileID
         }
+    }
+
+
+    ###########################################################################
+    # Wrapper for shape generation
+    # Changed 02.03.2022 by Max Bußkamp:
+    #   - Initial version
+    ###########################################################################
+    proc pulsegen {shape_type dur sweepwidth rfmax var1 var2 phase stepsize} {
+        # var1: N/Zeta/Beta
+        # var2: none/tan(kappa)/mean
+
+        if {[string equal $shape_type "WURST"]} {
+            set shape [list2shape [wurst $dur $sweepwidth $rfmax $var1 $phase $stepsize]]
+        } elseif {[string equal $shape_type "tanhpulse"]} {
+            set shape [list2shape [tanhpulse $dur $sweepwidth $rfmax $var1 $var2 $phase $stepsize]]
+        } elseif {[string equal $shape_type "hspulse"]} {
+            set shape [list2shape [hspulse $dur $sweepwidth $rfmax $var1 $phase $stepsize]]
+        } elseif {[string equal $shape_type "caWURST"]} {
+            set shape [list2shape [cawurst $dur $sweepwidth $rfmax $var1 $phase $stepsize]]
+        } elseif {[string equal $shape_type "supergaussian"]} {
+            set shape [list2shape [supergaussian $dur $sweepwidth $rfmax $var1 $var2 $phase $stepsize]]
+        }
+
+        return $shape
+    }
+
+
+    ###########################################################################
+    # Wrapper for shape generation with phasecorrection
+    # Changed 02.03.2022 by Max Bußkamp:
+    #   - Initial version
+    ###########################################################################
+    proc pulsegen_corr {shape_type dur sweepwidth rfmax var1 var2 phase stepsize filename_phasecorrect} {
+        # var1: N/Zeta/Beta
+        # var2: none/tan(kappa)/mean
+
+        if {[string equal $par(shape_type) "WURST"]} {
+            set shape [list2shape [wurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]]
+        } elseif {[string equal $par(shape_type) "tanhpulse"]} {
+            set shape [list2shape [tanhpulse_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]]
+        } elseif {[string equal $par(shape_type) "hspulse"]} {
+            set shape [list2shape [hspulse_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]]
+        } elseif {[string equal $par(shape_type) "caWURST"]} {
+            set shape [list2shape [cawurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]]
+        } elseif {[string equal $par(shape_type) "supergaussian"]} {
+            set shape [list2shape [supergaussian_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]]
+        }
+
+        return $shape
+    }
+
+
+    proc pulsegen_corr_list {shape_type dur sweepwidth rfmax var1 var2 phase stepsize filename_phasecorrect} {
+        # var1: N/Zeta/Beta
+        # var2: none/tan(kappa)/mean
+
+        if {[string equal $par(shape_type) "WURST"]} {
+            set shape_list       [wurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]
+        } elseif {[string equal $par(shape_type) "tanhpulse"]} {
+            set shape_list       [tanhpulse_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]
+        } elseif {[string equal $par(shape_type) "hspulse"]} {
+            set shape_list       [hspulse_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]
+        } elseif {[string equal $par(shape_type) "caWURST"]} {
+            set shape_list       [cawurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]
+        } elseif {[string equal $par(shape_type) "supergaussian"]} {
+            set shape_list       [supergaussian_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]
+        }
+
+        return $shape_list
     }
 
 
@@ -813,7 +737,7 @@ def create_simpson():  # Write simpson input files
 
         set phasecorr_file  [open $filename_phasecorrect]
         set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr "\n"]
+        set phasecorr_list  [split $phasecorr ""]
 
         #Variables
         set pi2 		[expr (4*atan(1))/2]
@@ -928,7 +852,7 @@ def create_simpson():  # Write simpson input files
 
         set phasecorr_file  [open $filename_phasecorrect]
         set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr "\n"]
+        set phasecorr_list  [split $phasecorr ""]
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($tw/$stepsize)]
 
@@ -959,7 +883,7 @@ def create_simpson():  # Write simpson input files
 
         set phasecorr_file  [open $filename_phasecorrect]
         set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr "\n"]
+        set phasecorr_list  [split $phasecorr ""]
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($tw/$stepsize)]
 
@@ -986,7 +910,7 @@ def create_simpson():  # Write simpson input files
 
         set phasecorr_file  [open $filename_phasecorrect]
         set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr "\n"]
+        set phasecorr_list  [split $phasecorr ""]
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr int(round($tw/$stepsize))]
         set kappa [expr atan($tan_kappa)]
@@ -1023,7 +947,7 @@ def create_simpson():  # Write simpson input files
 
         set phasecorr_file  [open $filename_phasecorrect]
         set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr "\n"]
+        set phasecorr_list  [split $phasecorr ""]
         set nsteps [expr round($tw/$stepsize)]
         set phi0 [expr 180.0*$Delta*1000*$tw/10.6e6]
 
@@ -1112,7 +1036,7 @@ def create_simpson():  # Write simpson input files
 
         set phasecorr_file  [open $filename_phasecorrect]
         set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr "\n"]
+        set phasecorr_list  [split $phasecorr ""]
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($tw/$stepsize)]
 
@@ -1139,7 +1063,7 @@ def create_simpson():  # Write simpson input files
 
         set phasecorr_file  [open $filename_phasecorrect]
         set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr "\n"]
+        set phasecorr_list  [split $phasecorr ""]
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($tw/$stepsize)]
         set kappa [expr atan($tan_kappa)]
