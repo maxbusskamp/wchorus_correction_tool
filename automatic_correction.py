@@ -105,6 +105,12 @@ def create_simpson():  # Write simpson input files
     proc main {} {
         global par rfsh1 rfsh2 rfsh3 argc argv
 
+        lappend ::auto_path ./src/
+        if {![namespace exists shapetools_liquid]} {
+            package require shapetools_liquid
+            namespace import shapetools_liquid::*
+        }
+
         # Read Arguments from commandline
         if { $argc != 30 } {
             puts "Wrong number of Inputs"
@@ -139,7 +145,6 @@ def create_simpson():  # Write simpson input files
             set par(phaseoff1)                  [lindex $argv 27]
             set par(phaseoff2)                  [lindex $argv 28]
             set par(phaseoff3)                  [lindex $argv 29]}
-
         set par(stepsize)   0.05
 
         set par(np_tau1)    [expr round($par(tau1)/$par(stepsize))]
@@ -244,8 +249,8 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-            set rfsh1 [pulsegen_corr $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
-            set rfsh_shape1 [pulsegen_corr_list $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
+            set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]
+            set rfsh_shape1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
 
             printwave $rfsh_shape1 1
             save_shape $rfsh1 $par(filename).simpson1
@@ -253,14 +258,14 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-            set rfsh1 [pulsegen_corr $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
-            set rfsh_shape1 [pulsegen_corr_list $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
+            set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]
+            set rfsh_shape1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
             set rfsh2 [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]
-            set rfsh2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
+            set rfsh_shape2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
 
             printwave $rfsh_shape1 1
             printwave $rfsh_shape2 2
@@ -322,8 +327,8 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-            set rfsh1 [pulsegen_corr $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
-            set rfsh_shape1 [pulsegen_corr_list $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) $par(filename_phasecorrect)]
+            set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]
+            set rfsh_shape1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
@@ -336,24 +341,6 @@ def create_simpson():  # Write simpson input files
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
             set rfsh3 [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf2) $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]
             set rfsh_shape3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh3 [list2shape [wurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
-                set rfsh_shape3 [wurst $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
-            } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-                set rfsh3 [list2shape [tanhpulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(phaseoff3)]]
-                set rfsh_shape3 [tanhpulse $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3)]
-            } elseif {[string equal $par(shape_type) "hspulse"]} {
-                set rfsh3 [list2shape [hspulse $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
-                set rfsh_shape3 [hspulse $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
-            } elseif {[string equal $par(shape_type) "caWURST"]} {
-                set rfsh3 [list2shape [cawurst $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(phaseoff3)]]
-                set rfsh_shape3 [cawurst $par(tw3) $par(Delta3) 100 $par(var31) $par(phaseoff3)]
-            } elseif {[string equal $par(shape_type) "supergaussian"]} {
-                set rfsh3 [list2shape [supergaussian $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(phaseoff3)]]
-                set rfsh_shape3 [supergaussian $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3)]
-            }
-
 
             printwave $rfsh_shape1 1
             printwave $rfsh_shape2 2
@@ -424,68 +411,25 @@ def create_simpson():  # Write simpson input files
     # Changed 02.03.2022 by Max Bußkamp:
     #   - Initial version
     ###########################################################################
-    proc pulsegen {shape_type dur sweepwidth rfmax var1 var2 phase stepsize} {
+    proc pulsegen {shape_type dur sweepwidth rfmax var1 var2 phase stepsize args} {
+        array set options { -filename_phasecorrect 'none' }
+        array set options $args
         # var1: N/Zeta/Beta
         # var2: none/tan(kappa)/mean
 
         if {[string equal $shape_type "WURST"]} {
-            set shape [list2shape [wurst $dur $sweepwidth $rfmax $var1 $phase $stepsize]]
+            set shape [list2shape [wurst $dur $rfmax $sweepwidth $var1 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         } elseif {[string equal $shape_type "tanhpulse"]} {
-            set shape [list2shape [tanhpulse $dur $sweepwidth $rfmax $var1 $var2 $phase $stepsize]]
+            set shape [list2shape [tanhpulse $dur $rfmax $sweepwidth $var1 $var2 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         } elseif {[string equal $shape_type "hspulse"]} {
-            set shape [list2shape [hspulse $dur $sweepwidth $rfmax $var1 $phase $stepsize]]
+            set shape [list2shape [hspulse $dur $rfmax $sweepwidth $var1 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         } elseif {[string equal $shape_type "caWURST"]} {
-            set shape [list2shape [cawurst $dur $sweepwidth $rfmax $var1 $phase $stepsize]]
+            set shape [list2shape [cawurst $dur $rfmax $sweepwidth $var1 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         } elseif {[string equal $shape_type "supergaussian"]} {
-            set shape [list2shape [supergaussian $dur $sweepwidth $rfmax $var1 $var2 $phase $stepsize]]
+            set shape [list2shape [supergaussian $dur $rfmax $sweepwidth $var1 $var2 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         }
 
         return $shape
-    }
-
-
-    ###########################################################################
-    # Wrapper for shape generation with phasecorrection
-    # Changed 02.03.2022 by Max Bußkamp:
-    #   - Initial version
-    ###########################################################################
-    proc pulsegen_corr {shape_type dur sweepwidth rfmax var1 var2 phase stepsize filename_phasecorrect} {
-        # var1: N/Zeta/Beta
-        # var2: none/tan(kappa)/mean
-
-        if {[string equal $par(shape_type) "WURST"]} {
-            set shape [list2shape [wurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]]
-        } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-            set shape [list2shape [tanhpulse_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]]
-        } elseif {[string equal $par(shape_type) "hspulse"]} {
-            set shape [list2shape [hspulse_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]]
-        } elseif {[string equal $par(shape_type) "caWURST"]} {
-            set shape [list2shape [cawurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]]
-        } elseif {[string equal $par(shape_type) "supergaussian"]} {
-            set shape [list2shape [supergaussian_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]]
-        }
-
-        return $shape
-    }
-
-
-    proc pulsegen_corr_list {shape_type dur sweepwidth rfmax var1 var2 phase stepsize filename_phasecorrect} {
-        # var1: N/Zeta/Beta
-        # var2: none/tan(kappa)/mean
-
-        if {[string equal $par(shape_type) "WURST"]} {
-            set shape_list       [wurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]
-        } elseif {[string equal $par(shape_type) "tanhpulse"]} {
-            set shape_list       [tanhpulse_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]
-        } elseif {[string equal $par(shape_type) "hspulse"]} {
-            set shape_list       [hspulse_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]
-        } elseif {[string equal $par(shape_type) "caWURST"]} {
-            set shape_list       [cawurst_phasecorr $dur $sweepwidth $rfmax $var1 $filename_phasecorrect $phase $stepsize]
-        } elseif {[string equal $par(shape_type) "supergaussian"]} {
-            set shape_list       [supergaussian_phasecorr $dur $sweepwidth $rfmax $var1 $var2 $filename_phasecorrect $phase $stepsize]
-        }
-
-        return $shape_list
     }
 
 
@@ -498,594 +442,6 @@ def create_simpson():  # Write simpson input files
         set data [split [string trim [read $f]]]
         close $f
         return $data
-    }
-
-
-    ###########################################################################
-    # Proc for caWURST shape calculation 
-    # Only use sweep direction 1
-    # Changed 16.08.2020 by Max Bußkamp:
-    #   - Added rfmax to input variables
-    #   - Added default values for stepsize, direction and offset
-    ###########################################################################
-    proc cawurst {tw Delta rfmax N {phaseoffset 0.0} {stepsize 0.05} {direction -1} {offset 0.0}} {
-        global par
-
-        #Variables
-        set pi2 		[expr (4*atan(1))/2]
-
-        # sweep / MHz
-        set sweep		[expr $Delta/1000.0]
-
-        set rate 		[expr 1.0e6*($sweep/$tw)]
-
-        #On-resonance q-factor
-        set q0			[expr (pow($rfmax,2))/(1e6*$rate)]
-
-        set nsp			[expr round($tw/$stepsize)]
-
-        #Amplitude
-        set b 			[expr (2*$pi2)/$tw]
-
-        #Frequency
-        set w0 			0
-        set k 			[expr 1.0e-6*$rate]
-
-        #Calculate frequency correction factor
-        set freq_prep_b 0.0
-        set phase_prep1	0.0
-        set freq_max 0.0
-        for {set i [expr round($nsp/2)+1]} {$i <= $nsp} {incr i} {
-            set time				[expr $stepsize*$i]
-            set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
-            lappend amplist	$amp_prep
-            
-            set freq_prep 	[expr (1.0e-6*$stepsize*($amp_prep**2/$q0)+$freq_prep_b)]
-            lappend freqlist $freq_prep
-            if {$freq_prep > $freq_max} {
-                set freq_max $freq_prep
-            }
-
-            set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
-            set phase_prep 	[expr fmod($phase_prep1*360+$phaseoffset,360)]
-            lappend phaselist $phase_prep
-            
-            set freq_prep_b $freq_prep
-        }
-
-        set sweepfactor [expr $sweep*1e6/2.0/$freq_max]
-
-        unset time
-        unset amp_prep
-        unset amplist
-        unset freq_prep
-        unset freqlist
-        unset phase_prep1
-        unset phase_prep
-        unset phaselist
-        unset freq_prep_b
-        
-        #Calculate amplitude and frequency for positive offset values 
-        set freq_prep_b 0.0
-        set phase_prep1	0.0
-        for {set i [expr round($nsp/2)+1]} {$i <= $nsp} {incr i} {
-            set time				[expr $stepsize*$i]
-            set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
-            lappend amplist	$amp_prep
-            
-            set freq_prep 	[expr (1.0e-6*$stepsize*$sweepfactor*($amp_prep**2/$q0)+$freq_prep_b)]
-            lappend freqlist $freq_prep
-
-            set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
-            set phase_prep 	[expr fmod($phase_prep1*360+$phaseoffset,360)]
-            lappend phaselist $phase_prep
-            
-            set freq_prep_b $freq_prep
-        }
-
-        set freqlist_length [llength $freqlist]
-
-        if {$direction == 1} {
-            set direc 1.0
-        } elseif {$direction == -1} {
-            set direc -1.0
-        } else {
-            puts "direction error"
-        }
-
-        for {set j 1} {$j < $nsp} {incr j} {
-            set index [expr $freqlist_length-$j]
-            if {$index < 0} {
-                set index [expr abs($index)]
-                set help $direc
-            } else {
-                set help [expr -1.0*$direc]
-            }
-            set time  		[expr $stepsize*$j]
-            set amp			[lindex $amplist $index]
-            set freq_help 	[lindex $freqlist $index]
-            set freq 		[expr $help*$freq_help]
-            set phase		[lindex $phaselist $index]
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $phase]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for WURST shape calculation
-    # Version 1 16.09.2020 by Max Bußkamp:
-    ###########################################################################
-    proc supergaussian {tw Delta rfmax N G {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
-        global par
-
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-
-        # t = $stepsize*$i
-        for {set i 1} {$i <= $nsteps} {incr i} {
-
-            set amp [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($stepsize*$i)-$G)/($tw)),$N))]
-
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset]
-            if {$direction} {
-                set ph [expr fmod(-$ph,360)+360.0]
-            } else {
-                set ph [expr fmod($ph,360)]
-            }
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for WURST shape calculation
-    # Changed 20.01.2020 by Max Bußkamp:
-    #   - Added Option for Phasecycle
-    #   - Added rfmax to input variables
-    #   - Added default values for stepsize, direction and offset
-    ###########################################################################
-    proc wurst {tw Delta rfmax N {phaseoffset 0.0} {stepsize 0.05} {direction 0} {offset 0.0}} {
-        global par
-
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set amp [expr $rfmax*(1.0-abs(pow(cos(($pi*$stepsize*$i)/($tw)),$N)))]
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset]
-            if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
-                set ph [expr fmod(-$ph,360)+360.0]
-            }
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for tanh/tan shape calculation
-    # Version 1.0 Max Busskamp 21.09.2019
-    ###########################################################################
-    proc tanhpulse {tw Delta rfmax zeta tan_kappa {phaseoffset 0.0} {stepsize 0.05} {direction 0}} {
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr int(round($tw/$stepsize))]
-        set kappa [expr atan($tan_kappa)]
-        set R [expr $Delta*1000*$tw/1000000.0]
-        set A [expr ($R*$pi)/($tw/1000000.0)]
-
-        set phi_max [expr -(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos($kappa))]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            if {$i <= $nsteps/2} {
-                set amp [expr $rfmax*tanh((2*$i*$stepsize*$zeta)/$tw)]
-            } else {
-                set amp [expr $rfmax*tanh((2*$zeta*(1.0-(($i*$stepsize)/$tw))))]
-            }
-            set ph [expr ($phi_max-(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$stepsize/1000000.0)/($tw/1000000.0))/cos($kappa)))*180/$pi+$phaseoffset]
-            if {$direction} {
-                set ph [expr fmod(-$ph,360)+360.0]
-            } else {
-                set ph [expr fmod($ph,360)]
-            }
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for HS shape calculation
-    # Version 1.1 MRH Sept 2016
-    ###########################################################################
-    proc hspulse {tw Delta rfmax beta {phaseoffset 0.0} {stepsize 0.05} {direction 0} {offset 0.0}} {
-
-        set nsteps [expr round($tw/$stepsize)]
-        set phi0 [expr 180.0*$Delta*1000*$tw/10.6e6]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set x [expr cosh($beta*(2*$i*$stepsize/$tw-1))]
-            set amp [expr $rfmax/$x]
-            set ph [expr $offset+$phi0*log($x)+$phaseoffset]
-
-            if {$direction} {
-                set ph [expr fmod(-$ph,360)+360.0]
-            } else {
-                set ph [expr fmod($ph,360)]
-            }
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for caWURST shape calculation 
-    # Only use sweep direction 1
-    # Changed 16.08.2020 by Max Bußkamp:
-    #   - Added rfmax to input variables
-    #   - Added default values for stepsize, direction and offset
-    ###########################################################################
-    proc cawurst_phasecorr {tw Delta rfmax N filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
-        global par
-
-        set phasecorr_file  [open $filename_phasecorrect]
-        set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr ""]
-
-        #Variables
-        set pi2 		[expr (4*atan(1))/2]
-
-        # sweep / MHz
-        set sweep		[expr $Delta/1000.0]
-
-        set rate 		[expr 1.0e6*($sweep/$tw)]
-
-        #On-resonance q-factor
-        set q0			[expr (pow($rfmax,2))/(1e6*$rate)]
-
-        set nsp			[expr round($tw/$stepsize)]
-
-        #Amplitude
-        set b 			[expr (2*$pi2)/$tw]
-
-        #Frequency
-        set w0 			0
-        set k 			[expr 1.0e-6*$rate]
-
-        #Calculate frequency correction factor
-        set freq_prep_b 0.0
-        set phase_prep1	0.0
-        set freq_max 0.0
-        for {set i [expr round($nsp/2)+1]} {$i <= $nsp} {incr i} {
-            set time				[expr $stepsize*$i]
-            set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
-            lappend amplist	$amp_prep
-            
-            set freq_prep 	[expr (1.0e-6*$stepsize*($amp_prep**2/$q0)+$freq_prep_b)]
-            lappend freqlist $freq_prep
-            if {$freq_prep > $freq_max} {
-                set freq_max $freq_prep
-            }
-
-            set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
-            set phase_prep 	[expr fmod($phase_prep1*360+$phaseoffset,360)]
-            lappend phaselist $phase_prep
-            
-            set freq_prep_b $freq_prep
-        }
-
-        set sweepfactor [expr $sweep*1e6/2.0/$freq_max]
-
-        unset time
-        unset amp_prep
-        unset amplist
-        unset freq_prep
-        unset freqlist
-        unset phase_prep1
-        unset phase_prep
-        unset phaselist
-        unset freq_prep_b
-
-        #Calculate amplitude and frequency for positive offset values 
-        set freq_prep_b 0.0
-        set phase_prep1	0.0
-        for {set i [expr round($nsp/2)+1]} {$i <= $nsp} {incr i} {
-            set time				[expr $stepsize*$i]
-            set amp_prep			[expr $rfmax*(1-abs((cos($b*$time))**($N)))]
-            lappend amplist	$amp_prep
-            
-            set freq_prep 	[expr (1.0e-6*$stepsize*$sweepfactor*($amp_prep**2/$q0)+$freq_prep_b)]
-            lappend freqlist $freq_prep
-            
-            set phase_prep1 [expr $phase_prep1+($freq_prep/(round($nsp)/(1.0e-6*$tw)))]
-            set phase_prep 	[expr $phase_prep1*360+$phaseoffset]
-            lappend phaselist $phase_prep
-            
-            set freq_prep_b $freq_prep
-        }
-
-        set freqlist_length [llength $freqlist]
-
-        if {$direction == 1} {
-            set direc 1.0
-        } elseif {$direction == -1} {
-            set direc -1.0
-        } else {
-            puts "direction error"
-        }
-
-        set index2 0
-        for {set j 1} {$j < $nsp} {incr j} {
-            set index [expr $freqlist_length-$j]
-            if {$index < 0} {
-                set index [expr abs($index)]
-                set help $direc
-            } else {
-                set help [expr -1.0*$direc]
-            }
-            set time  		[expr $stepsize*$j]
-            set amp			[lindex $amplist $index]
-            set freq_help 	[lindex $freqlist $index]
-            set freq 		[expr $help*$freq_help]
-            set phase		[expr fmod([lindex $phaselist $index]-[lindex $phasecorr_list $index2 0],360)]
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $phase]
-            incr index2
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for WURST shape calculation
-    # Version 1 16.09.2020 by Max Bußkamp:
-    ###########################################################################
-    proc supergaussian_phasecorr {tw Delta rfmax N G filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 1} {offset 0.0}} {
-        global par
-
-        set phasecorr_file  [open $filename_phasecorrect]
-        set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr ""]
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-
-        # t = $stepsize*$i
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set j [expr $i-1]
-
-            set amp [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($stepsize*$i)-$G)/($tw)),$N))]
-
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset+[lindex $phasecorr_list $j 0]]
-            if {$direction} {
-                set ph [expr fmod(-$ph,360)+360.0]
-            } else {
-                set ph [expr fmod($ph,360)]
-            }
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for phasecorrected WURST shape calculation
-    # Changed 09.07.2019 by Max Bußkamp:
-    ###########################################################################
-    proc wurst_phasecorr {tw Delta rfmax N filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 0} {offset 0.0}} {
-        global par
-
-        set phasecorr_file  [open $filename_phasecorrect]
-        set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr ""]
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set j [expr $i-1]
-            set amp [expr $rfmax*(1.0-abs(pow(cos(($pi*$stepsize*$i)/($tw)),$N)))]
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($offset*1e3+($Delta*1e3/2.0))*$stepsize*1e-6*$i-($Delta*1e3/(2.0*$tw*1e-6))*pow($stepsize*1e-6*$i,2)))+$phaseoffset+[lindex $phasecorr_list $j 0]]
-            if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
-                set ph [expr fmod(-$ph,360)+360.0]
-            }
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for tanh/tan shape calculation
-    # Version 1.0 Max Busskamp 21.09.2019
-    ###########################################################################
-    proc tanhpulse_phasecorr {tw Delta rfmax zeta tan_kappa filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 0}} {
-
-        set phasecorr_file  [open $filename_phasecorrect]
-        set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr ""]
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr int(round($tw/$stepsize))]
-        set kappa [expr atan($tan_kappa)]
-        set R [expr $Delta*1000*$tw/1000000.0]
-        set A [expr ($R*$pi)/($tw/1000000.0)]
-
-        set phi_max [expr -(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos($kappa))]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set j [expr $i-1]
-            if {$i <= $nsteps/2} {
-                set amp [expr $rfmax*tanh((2*$i*$stepsize*$zeta)/$tw)]
-            } else {
-                set amp [expr $rfmax*tanh((2*$zeta*(1.0-(($i*$stepsize)/$tw))))]
-            }
-            set ph [expr ($phi_max-(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$stepsize/1000000.0)/($tw/1000000.0))/cos($kappa)))*180/$pi+$phaseoffset+[lindex $phasecorr_list $j 0]]
-            if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
-                set ph [expr fmod(-$ph,360)+360.0]
-            }
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for HS shape calculation
-    # Version 1.1 MRH Sept 2016
-    ###########################################################################
-    proc hspulse_phasecorr {tw Delta rfmax beta filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 0} {offset 0.0}} {
-
-        set phasecorr_file  [open $filename_phasecorrect]
-        set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr ""]
-        set nsteps [expr round($tw/$stepsize)]
-        set phi0 [expr 180.0*$Delta*1000*$tw/10.6e6]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set j [expr $i-1]
-            set x [expr cosh($beta*(2*$i*$stepsize/$tw-1))]
-            set amp [expr $rfmax/$x]
-            set ph [expr $offset+$phi0*log($x)+$phaseoffset+[lindex $phasecorr_list $j 0]]
-
-            if {$direction} {
-                set ph [expr fmod(-$ph,360)+360.0]
-            } else {
-                set ph [expr fmod($ph,360)]
-            }
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for sigmoid shape calculation
-    # Changed 29.04.2020 by Max Bußkamp:
-    #
-    # Version 1.0 Max Busskamp 29.04.2020
-    ###########################################################################
-    proc sigmoid {tw Delta rfmax k d N {phaseoffset 0.0} {stepsize 0.05}} {
-        global par
-
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set amp [expr $rfmax*(1.0-abs(pow(cos(($pi*$stepsize*$i)/($tw)),$N)))]
-            set ph [expr (($d*exp($k*pow((2.0*$i/$nsteps)-1.0,$d))*$Delta*1e3*$k*pow((2.0*$i/$nsteps)-1.0,$d-1))/pow((1+exp($k*pow((2.0*$i/$nsteps)-1.0,$d))),2))*180/$pi+$phaseoffset]
-            
-            set ph [expr fmod($ph,360)]
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for WURST shape with TANH phase calculation
-    # Changed 14.11.2019 by Max Bußkamp:
-    #   - Version 1.0
-    ###########################################################################
-    proc wurst_amp_tanh_phase {tw Delta rfmax N tan_kappa {phaseoffset 0.0} {stepsize 0.05} {direction 0} {offset 0.0}} {
-        global par
-
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-        set kappa [expr atan($tan_kappa)]
-        set R [expr $Delta*1000*$tw/1000000.0]
-        set A [expr ($R*$pi)/($tw/1000000.0)]
-
-        set phi_max [expr -(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos($kappa))]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set amp [expr $rfmax*(1.0-abs(pow(cos(($pi*$stepsize*$i)/($tw)),$N)))]
-
-            set ph [expr ($phi_max-(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$stepsize/1000000.0)/($tw/1000000.0))/cos($kappa)))*180/$pi+$phaseoffset]
-            if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
-                set ph [expr fmod(-$ph,360)+360.0]
-            }
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for sigmoid shape calculation
-    # Changed 29.04.2020 by Max Bußkamp:
-    #
-    # Version 1.0 Max Busskamp 29.04.2020
-    ###########################################################################
-    proc sigmoid_phasecorr {tw Delta rfmax k d N filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05}} {
-        global par
-
-        set phasecorr_file  [open $filename_phasecorrect]
-        set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr ""]
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set j [expr $i-1]
-            set amp [expr $rfmax*(1.0-abs(pow(cos(($pi*$stepsize*$i)/($tw)),$N)))]
-            set ph [expr (($d*exp($k*pow((2.0*$i/$nsteps)-1.0,$d))*$Delta*1e3*$k*pow((2.0*$i/$nsteps)-1.0,$d-1))/pow((1+exp($k*pow((2.0*$i/$nsteps)-1.0,$d))),2))*180/$pi+$phaseoffset+[lindex $phasecorr_list $j 0]]
-            
-            set ph [expr fmod($ph,360)]
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc for WURST shape with TANH phase calculation
-    # Changed 14.11.2019 by Max Bußkamp:
-    #   - Version 1.0
-    ###########################################################################
-    proc wurst_amp_tanh_phase_phasecorr {tw Delta rfmax N tan_kappa filename_phasecorrect {phaseoffset 0.0} {stepsize 0.05} {direction 0} {offset 0.0}} {
-        global par
-
-        set phasecorr_file  [open $filename_phasecorrect]
-        set phasecorr       [read $phasecorr_file]
-        set phasecorr_list  [split $phasecorr ""]
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($tw/$stepsize)]
-        set kappa [expr atan($tan_kappa)]
-        set R [expr $Delta*1000*$tw/1000000.0]
-        set A [expr ($R*$pi)/($tw/1000000.0)]
-
-        set phi_max [expr -(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos($kappa))]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set j [expr $i-1]
-            set amp [expr $rfmax*(1.0-abs(pow(cos(($pi*$stepsize*$i)/($tw)),$N)))]
-
-            set ph [expr ($phi_max-(($A*$tw/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$stepsize/1000000.0)/($tw/1000000.0))/cos($kappa)))*180/$pi+$phaseoffset+[lindex $phasecorr_list $j 0]]
-            if {$direction} {
-                set ph [expr fmod($ph,360)]
-            } else {
-                set ph [expr fmod(-$ph,360)+360.0]
-            }
-
-            lappend wavelist [format "%6.2f %6.2f" $amp $ph]
-        }
-        return $wavelist
     }
 
 
