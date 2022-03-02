@@ -1,0 +1,2 @@
+sudo mkdir -p /usr/local/tcl/shapetools_liquid
+sudo cp shapetools_liquid.tcl pkgIndex.tcl /usr/local/tcl/shapetools_liquid/
