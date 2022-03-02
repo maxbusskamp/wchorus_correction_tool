@@ -82,13 +82,25 @@ namespace eval shapetools_liquid {
         array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
-
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($dur/$options(-stepsize))]
 
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr ""]
+        }
+
         for {set i 1} {$i <= $nsteps} {incr i} {
             set ampl [expr $rfmax*(1.0-abs(pow(cos(($pi*$options(-stepsize)*$i)/($dur)),$N)))]
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            } else {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
+
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
             } elseif {$options(-direction) == 0} {
@@ -118,6 +130,13 @@ namespace eval shapetools_liquid {
         array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
+
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr ""]
+        }
 
         #Variables
         set pi2 		[expr (4*atan(1))/2]
@@ -213,7 +232,11 @@ namespace eval shapetools_liquid {
             set ampl			[lindex $ampllist $index]
             set freq_help 	[lindex $freqlist $index]
             set freq 		[expr $help*$freq_help]
-            set phase		[lindex $options(-phase)list $index]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set phase	[lindex $phaselist $index]
+            } else {
+                set phase	[expr fmod([lindex $phaselist $index]-[lindex $phasecorr_list $index2 0],360)]
+            }
 
             lappend wavelist [format "%6.4f %6.4f" $ampl $options(-phase)]
         }
@@ -233,12 +256,23 @@ namespace eval shapetools_liquid {
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($dur/$options(-stepsize))]
 
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr ""]
+        }
+
         # t = $options(-stepsize)*$i
         for {set i 1} {$i <= $nsteps} {incr i} {
 
             set ampl [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($options(-stepsize)*$i)-$G)/($dur)),$N))]
 
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            } else {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
             } elseif {$options(-direction) == 0} {
@@ -262,6 +296,13 @@ namespace eval shapetools_liquid {
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
 
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr ""]
+        }
+
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr int(round($dur/$options(-stepsize)))]
         set kappa [expr atan($tan_kappa)]
@@ -276,7 +317,11 @@ namespace eval shapetools_liquid {
             } else {
                 set ampl [expr $rfmax*tanh((2*$zeta*(1.0-(($i*$options(-stepsize))/$dur))))]
             }
-            set ph [expr ($phi_max-(($A*$dur/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$options(-stepsize)/1000000.0)/($dur/1000000.0))/cos($kappa)))*180/$pi+$options(-phase)]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr ($phi_max-(($A*$dur/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$options(-stepsize)/1000000.0)/($dur/1000000.0))/cos($kappa)))*180/$pi+$options(-phase)]
+            } else {
+                set ph [expr ($phi_max-(($A*$dur/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$options(-stepsize)/1000000.0)/($dur/1000000.0))/cos($kappa)))*180/$pi+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
             } elseif {$options(-direction) == 0} {
@@ -301,13 +346,24 @@ namespace eval shapetools_liquid {
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
 
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr ""]
+        }
+
         set nsteps [expr round($dur/$options(-stepsize))]
         set phi0 [expr 180.0*$Delta*1000*$dur/10.6e6]
 
         for {set i 1} {$i <= $nsteps} {incr i} {
             set x [expr cosh($beta*(2*$i*$options(-stepsize)/$dur-1))]
             set ampl [expr $rfmax/$x]
-            set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)]
+            } else {
+                set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
 
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
