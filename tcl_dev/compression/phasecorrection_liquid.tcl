@@ -82,7 +82,7 @@ proc pulseq {} {
 proc main {} {
     global par rfsh1 rfsh2 rfsh3 rfsh_combined argc argv
 
-    lappend ::auto_path ./src/
+    lappend ::auto_path ../../src/
         if {![namespace exists shapetools_liquid]} {
             package require shapetools_liquid
             namespace import shapetools_liquid::wurst
@@ -232,7 +232,7 @@ for {set index 0} {$index<$par(phasecycles)} {incr index} {
         set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
 
         if {[string equal $par(shape_type) "WURST"]} {
-            set rfsh1 [wurst $par(tw1) $par(rf1) $par(Delta1) $par(var11) -phase $par(ph1) -stepsize $par(stepsize)]
+            set rfsh1 [wurst $par(tw1) $par(rf1) $par(Delta1) $par(var11) -phase $par(ph1) -stepsize $par(stepsize) -filename_phasecorrect 'none']
         } else {
             puts "Only useable with WURST shape"
             exit
@@ -244,7 +244,7 @@ for {set index 0} {$index<$par(phasecycles)} {incr index} {
         set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
 
         if {[string equal $par(shape_type) "WURST"]} {
-            set rfsh2 [wurst $par(tw2) $par(rf2) $par(Delta2) $par(var21) -phase $par(ph2) -stepsize $par(stepsize)]
+            set rfsh2 [wurst $par(tw2) $par(rf2) $par(Delta2) $par(var21) -phase $par(ph2) -stepsize $par(stepsize) -filename_phasecorrect 'none']
         } else {
             puts "Only useable with WURST shape"
             exit
@@ -256,31 +256,47 @@ for {set index 0} {$index<$par(phasecycles)} {incr index} {
         set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
 
         if {[string equal $par(shape_type) "WURST"]} {
-            set rfsh3 [wurst $par(tw3) $par(rf3) $par(Delta3) $par(var31) -phase $par(ph3) -stepsize $par(stepsize)]
+            set rfsh3 [wurst $par(tw3) $par(rf3) $par(Delta3) $par(var31) -phase $par(ph3) -stepsize $par(stepsize) -filename_phasecorrect 'none']
         } else {
             puts "Only useable with WURST shape"
             exit
         }
 
-        # set par(seq_duration) [expr $par(tw1)+$par(tw2)+$par(tw3)+50-450]
+        set compression 100
+
+
+        set delay1_length [expr $par(tw1)-$compression]
+        set delay2_length [expr $par(tw2)-$compression]
+        set delay3_length [expr $par(tau2)-$compression]
+        set delay4_length [expr $par(tw3)]
+        set delay1 [zero_ampl $delay1_length]
+        set delay2 [zero_ampl $delay2_length]
+        set delay3 [zero_ampl $delay3_length]
+        set delay4 [zero_ampl $delay4_length]
+
+        set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$delay4_length]
+        puts $par(seq_duration)
+
+        set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay3 $delay4] \
+                                     [list $delay1 $rfsh2 $delay3 $delay4]]
+        set rfsh_combined [list2shape [shape_add [list $rfsh_combined] \
+                                                 [list $delay1 $delay2 $delay3 $rfsh3]]]
+        save_shape $rfsh_combined combined.shape
+
+
+
+
+        # set par(seq_duration) [expr 1500]
         # set delay_tau [zero_ampl 50]
         # set delay_temp [zero_ampl 450]
-        # set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay_tau $delay3] \
-        #                              [list $delay1 $rfsh2 $delay_tau $delay3]]
-        # set rfsh_combined [list2shape [shape_add [list $rfsh_combined] \
-        #                                          [list $delay1 $delay2 $delay_temp $delay_tau $rfsh3]]]
-        set par(seq_duration) [expr 1500]
-        set delay_tau [zero_ampl 50]
-        set delay_temp [zero_ampl 450]
-        set delay1 [zero_ampl 750]
-        set delay2 [zero_ampl 500]
-        set delay3 [zero_ampl 250]
-
-        set rfsh_combined [shape_add [list $rfsh1 $delay1 ] \
-                                     [list $rfsh2 ]]
-        set rfsh_combined [list2shape [shape_add [list $rfsh_combined $delay3] \
-                                                 [list $delay2 $rfsh3]]]
-        save_shape $rfsh_combined combined.shape
+        # set delay1 [zero_ampl 750]
+        # set delay2 [zero_ampl 500]
+        # set delay3 [zero_ampl 250]
+        # set rfsh_combined [shape_add [list $rfsh1 $delay1 ] \
+        #                              [list $rfsh2 ]]
+        # set rfsh_combined [list2shape [shape_add [list $rfsh_combined $delay3] \
+        #                                          [list $delay2 $rfsh3]]]
+        # save_shape $rfsh_combined combined.shape
 
     } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
