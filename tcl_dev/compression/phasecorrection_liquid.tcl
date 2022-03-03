@@ -262,19 +262,19 @@ for {set index 0} {$index<$par(phasecycles)} {incr index} {
             exit
         }
 
-        set compression 100
+        set compression 200
 
 
         set delay1_length [expr $par(tw1)-$compression]
         set delay2_length [expr $par(tw2)-$compression]
         set delay3_length [expr $par(tau2)-$compression]
-        set delay4_length [expr $par(tw3)]
+        set delay4_length [expr $par(tw3)-$compression]
         set delay1 [zero_ampl $delay1_length]
         set delay2 [zero_ampl $delay2_length]
         set delay3 [zero_ampl $delay3_length]
         set delay4 [zero_ampl $delay4_length]
 
-        set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$delay4_length]
+        set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$par(tw3)]
         puts $par(seq_duration)
 
         set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay3 $delay4] \
