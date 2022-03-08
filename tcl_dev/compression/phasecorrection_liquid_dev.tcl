@@ -262,40 +262,55 @@ for {set index 0} {$index<$par(phasecycles)} {incr index} {
             exit
         }
 
-        set compression 200
+        set compression 100
 
+        if {$compression < $par(tau2)} {
+            set delay1_length [expr $par(tw1)-$compression]
+            set delay2_length [expr $par(tw2)-$compression]
+            set delay3_length [expr $par(tau2)-$compression]
+            set delay4_length [expr $par(tw3)-$compression]
+            set delay1 [zero_ampl $delay1_length]
+            set delay2 [zero_ampl $delay2_length]
+            set delay3 [zero_ampl $delay3_length]
+            set delay4 [zero_ampl $delay4_length]
 
-        set delay1_length [expr $par(tw1)-$compression]
-        set delay2_length [expr $par(tw2)-$compression]
-        set delay3_length [expr $par(tau2)-$compression]
-        set delay4_length [expr $par(tw3)-$compression]
-        set delay1 [zero_ampl $delay1_length]
-        set delay2 [zero_ampl $delay2_length]
-        set delay3 [zero_ampl $delay3_length]
-        set delay4 [zero_ampl $delay4_length]
+            set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$par(tw3)]
+            puts $par(seq_duration)
 
-        set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$par(tw3)]
-        puts $par(seq_duration)
+            puts "Sequence Duration: $par(seq_duration)"
+            puts "Starting combine 1"
+            set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay3 $delay4]                                             [list $delay1 $rfsh2 $delay3 $delay4]]
+            puts "Finished combine 1"
+            puts [llength $rfsh_combined]
+            puts "Starting combine 2"
+            set rfsh_combined [list2shape [shape_add [list $rfsh_combined]                                                         [list $delay1 $delay2 $delay3 $rfsh3]]]
+        } else {
+            set delay1_length_extra [expr $par(tw1)-$compression]
+            set delay1_length [expr $par(tw1)-$compression-($compression-$par(tau2))]
+            set delay2_length [expr $par(tw2)-$compression-($compression-$par(tau2))]
+            set delay4_length [expr $par(tw3)-$compression]
+            set delay1_extra [zero_ampl [expr $par(tw1)-$compression]]
+            set delay1 [zero_ampl $delay1_length]
+            set delay2 [zero_ampl $delay2_length]
+            set delay4 [zero_ampl $delay4_length]
 
-        set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay3 $delay4] \
-                                     [list $delay1 $rfsh2 $delay3 $delay4]]
-        set rfsh_combined [list2shape [shape_add [list $rfsh_combined] \
-                                                 [list $delay1 $delay2 $delay3 $rfsh3]]]
-        save_shape $rfsh_combined combined.shape
-
-
-
-
-        # set par(seq_duration) [expr 1500]
-        # set delay_tau [zero_ampl 50]
-        # set delay_temp [zero_ampl 450]
-        # set delay1 [zero_ampl 750]
-        # set delay2 [zero_ampl 500]
-        # set delay3 [zero_ampl 250]
-        # set rfsh_combined [shape_add [list $rfsh1 $delay1 ] \
-        #                              [list $rfsh2 ]]
-        # set rfsh_combined [list2shape [shape_add [list $rfsh_combined $delay3] \
-        #                                          [list $delay2 $rfsh3]]]
+            set par(seq_duration) [expr $delay1_length+$delay2_length+$par(tw3)+($compression-$par(tau2))]
+            set seq_duration1 [expr $delay2_length+$delay4_length+$par(tw1)]
+            set seq_duration2 [expr $delay1_length+$delay4_length+$par(tw2)]
+            set seq_duration3 [expr $delay1_length_extra+$delay2_length+$par(tw3)]
+            
+            # puts "Sequence Duration: $par(seq_duration)"
+            # puts "Duration 1: $seq_duration1"
+            # puts "Duration 2: $seq_duration2"
+            # puts "Duration 3: $seq_duration3"
+            # puts "Starting combine 1"
+            set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay4]                                             [list $delay1 $rfsh2 $delay4]]
+            # puts "Finished combine 1"
+            # puts [llength $rfsh_combined]
+            # puts "Starting combine 2"
+            set rfsh_combined [list2shape [shape_add [list $rfsh_combined]                                                         [list $delay1_extra $delay2 $rfsh3]]]
+            # puts "Finished combine 2"
+        }
         # save_shape $rfsh_combined combined.shape
 
     } elseif {[string equal $par(type) "loadshape_double_echo"]} {
