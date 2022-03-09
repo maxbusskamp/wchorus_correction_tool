@@ -90,7 +90,7 @@ namespace eval shapetools_liquid {
             set phasecorr_file  [open $options(-filename_phasecorrect)]
             set phasecorr       [read $phasecorr_file]
             set phasecorr_list  [split $phasecorr "\n"]
-            puts $phasecorr_list
+            # puts $phasecorr_list
         }
 
         for {set i 1} {$i <= $nsteps} {incr i} {
