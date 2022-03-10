@@ -1,0 +1,6 @@
+*.phasecorr
+*.info
+*.out
+*.png
+*.shape*
+*.simpson*

@@ -151,7 +151,7 @@ def create_simpson():  # Write simpson input files
             set par(phaseoff2)                  [lindex $argv 28]
             set par(phaseoff3)                  [lindex $argv 29]
             set par(compression)                [lindex $argv 30]}
-        set par(stepsize)   0.05
+        set par(stepsize)   0.05         
 
         set par(np_tau1)    [expr round($par(tau1)/$par(stepsize))]
         set par(np_tau2)    [expr round($par(tau2)/$par(stepsize))]
@@ -215,6 +215,17 @@ def create_simpson():  # Write simpson input files
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
             set rfsh3 [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]
+        
+        
+        
+        
+
+
+
+
+
+        
+        
         } elseif {[string equal $par(type) "compressedCHORUS_cycled"]} {
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
@@ -229,7 +240,6 @@ def create_simpson():  # Write simpson input files
                 puts "Only useable with WURST shape"
                 exit
             }
-
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
@@ -255,42 +265,70 @@ def create_simpson():  # Write simpson input files
             }
 
             if {$par(compression) < $par(tau2)} {
-                set delay1_length [expr $par(tw1)-$par(compression)]
-                set delay2_length [expr $par(tw2)-$par(compression)]
-                set delay3_length [expr $par(tau2)-$par(compression)]
-                set delay4_length [expr $par(tw3)-$par(compression)]
-                set delay1 [zero_ampl $delay1_length]
-                set delay2 [zero_ampl $delay2_length]
-                set delay3 [zero_ampl $delay3_length]
-                set delay4 [zero_ampl $delay4_length]
+                set delay1_length       [expr $par(tw1)-$par(compression)]
+                set delay2_length       [expr $par(tw2)]
+                set delay2_short_length [expr $par(tw2)-$par(compression)]
+                set delay3_length       [expr $par(tau2)-$par(compression)]
+                set delay4_length       [expr $par(tw3)]
+                set delay1              [zero_ampl $delay1_length]
+                set delay2              [zero_ampl $delay2_length]
+                set delay2_short        [zero_ampl $delay2_short_length]
+                set delay3              [zero_ampl $delay3_length]
+                set delay4              [zero_ampl $delay4_length]
+
+                # puts "Delay 1:$delay1_length"
+                # puts "Delay 2:$delay2_length"
+                # puts "Delay 2 short:$delay2_short_length"
+                # puts "Delay 3:$delay3_length"
+                # puts "Delay 4:$delay4_length"
 
                 set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$par(tw3)]
+                # puts "Sequence duration: $par(seq_duration)"
 
-                set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay3 $delay4] \
+                set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay3 $delay4]\
                                             [list $delay1 $rfsh2 $delay3 $delay4]]
-                set rfsh_combined [list2shape [shape_add [list $rfsh_combined] \
+                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
+                set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
                                                         [list $delay1 $delay2 $delay3 $rfsh3]]]
+                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             } else {
-                set delay1_length_extra [expr $par(tw1)-$par(compression)]
-                set delay1_length [expr $par(tw1)-$par(compression)-($par(compression)-$par(tau2))]
-                set delay2_length [expr $par(tw2)-$par(compression)-($par(compression)-$par(tau2))]
-                set delay4_length [expr $par(tw3)-$par(compression)]
-                set delay1_extra [zero_ampl [expr $par(tw1)-$par(compression)]]
-                set delay1 [zero_ampl $delay1_length]
-                set delay2 [zero_ampl $delay2_length]
-                set delay4 [zero_ampl $delay4_length]
+                set delay1_length       [expr $par(tw1)-$par(compression)]
+                set delay2_length       [expr $par(tw2)-($par(compression)-$par(tau2))]
+                set delay2_short_length [expr $par(tw2)-$par(compression)-($par(compression)-$par(tau2))]
+                set delay4_length       [expr $par(tw3)]
+                set delay4_short_length [expr $par(tw3)-($par(compression)-$par(tau2))]
+                set delay1              [zero_ampl $delay1_length]
+                set delay2              [zero_ampl $delay2_length]
+                set delay2_short        [zero_ampl $delay2_short_length]
+                set delay4              [zero_ampl $delay4_length]
+                set delay4_short        [zero_ampl $delay4_short_length]
 
-                set par(seq_duration) [expr $delay1_length+$delay2_length+$par(tw3)+($par(compression)-$par(tau2))]
-                set seq_duration1 [expr $delay2_length+$delay4_length+$par(tw1)]
-                set seq_duration2 [expr $delay1_length+$delay4_length+$par(tw2)]
-                set seq_duration3 [expr $delay1_length_extra+$delay2_length+$par(tw3)]
+                # puts "Delay 1: $delay1_length"
+                # puts "Delay 2: $delay2_length"
+                # puts "Delay 2 short: $delay2_short_length"
+                # puts "Delay 3: 0"
+                # puts "Delay 4: $delay4_length"
+                # puts "Delay 4 short: $delay4_short_length"
+
+                set par(seq_duration) [expr $delay1_length+$delay2_length+$delay4_length]
+                # puts "Sequence duration: $par(seq_duration)"
                 
-                set rfsh_combined [shape_add [list $rfsh1 $delay2 $delay4] \
-                                            [list $delay1 $rfsh2 $delay4]]
-                set rfsh_combined [list2shape [shape_add [list $rfsh_combined] \
-                                                        [list $delay1_extra $delay2 $rfsh3]]]
+                set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay4]\
+                                            [list $delay1 $rfsh2 $delay4_short]]
+                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
+                set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
+                                                        [list $delay1 $delay2 $rfsh3]]]
+                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
             save_shape $rfsh_combined combined.shape
+
+
+
+
+
+
+
+
 
         } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
@@ -438,66 +476,87 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-            set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]
+            set rfsh1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
             set rfsh_shape1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-            set rfsh2 [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]
+            set rfsh2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
             set rfsh_shape2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
 
             # Set third WURST pulse (refocussing)
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
-            set rfsh3 [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf2) $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]
+            set rfsh3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf2) $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]]
             set rfsh_shape3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]]
 
             if {$par(compression) < $par(tau2)} {
-                set delay1_length [expr $par(tw1)-$par(compression)]
-                set delay2_length [expr $par(tw2)-$par(compression)]
-                set delay3_length [expr $par(tau2)-$par(compression)]
-                set delay4_length [expr $par(tw3)-$par(compression)]
-                set delay1 [zero_ampl $delay1_length]
-                set delay2 [zero_ampl $delay2_length]
-                set delay3 [zero_ampl $delay3_length]
-                set delay4 [zero_ampl $delay4_length]
+                set delay1_length       [expr $par(tw1)-$par(compression)]
+                set delay2_length       [expr $par(tw2)]
+                set delay2_short_length [expr $par(tw2)-$par(compression)]
+                set delay3_length       [expr $par(tau2)-$par(compression)]
+                set delay4_length       [expr $par(tw3)]
+                set delay1              [zero_ampl $delay1_length]
+                set delay2              [zero_ampl $delay2_length]
+                set delay2_short        [zero_ampl $delay2_short_length]
+                set delay3              [zero_ampl $delay3_length]
+                set delay4              [zero_ampl $delay4_length]
+
+                # puts "Delay 1:$delay1_length"
+                # puts "Delay 2:$delay2_length"
+                # puts "Delay 2 short:$delay2_short_length"
+                # puts "Delay 3:$delay3_length"
+                # puts "Delay 4:$delay4_length"
 
                 set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$par(tw3)]
+                # puts "Sequence duration: $par(seq_duration)"
 
-                set rfsh_combined [shape_add [list [shape2list $rfsh1] $delay2 $delay3 $delay4] \
-                                            [list $delay1 [shape2list $rfsh2] $delay3 $delay4]]
-                set rfsh_combined [list2shape [shape_add [list $rfsh_combined] \
-                                                        [list $delay1 $delay2 $delay3 [shape2list $rfsh3]]]]
+                set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay3 $delay4]\
+                                            [list $delay1 $rfsh2 $delay3 $delay4]]
+                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
+                set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
+                                                        [list $delay1 $delay2 $delay3 $rfsh3]]]
+                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             } else {
-                set delay1_length_extra [expr $par(tw1)-$par(compression)]
-                set delay1_length [expr $par(tw1)-$par(compression)-($par(compression)-$par(tau2))]
-                set delay2_length [expr $par(tw2)-$par(compression)-($par(compression)-$par(tau2))]
-                set delay4_length [expr $par(tw3)-$par(compression)]
-                set delay1_extra [zero_ampl [expr $par(tw1)-$par(compression)]]
-                set delay1 [zero_ampl $delay1_length]
-                set delay2 [zero_ampl $delay2_length]
-                set delay4 [zero_ampl $delay4_length]
+                set delay1_length       [expr $par(tw1)-$par(compression)]
+                set delay2_length       [expr $par(tw2)-($par(compression)-$par(tau2))]
+                set delay2_short_length [expr $par(tw2)-$par(compression)-($par(compression)-$par(tau2))]
+                set delay4_length       [expr $par(tw3)]
+                set delay4_short_length [expr $par(tw3)-($par(compression)-$par(tau2))]
+                set delay1              [zero_ampl $delay1_length]
+                set delay2              [zero_ampl $delay2_length]
+                set delay2_short        [zero_ampl $delay2_short_length]
+                set delay4              [zero_ampl $delay4_length]
+                set delay4_short        [zero_ampl $delay4_short_length]
 
-                set par(seq_duration) [expr $delay1_length+$delay2_length+$par(tw3)+($par(compression)-$par(tau2))]
-                set seq_duration1 [expr $delay2_length+$delay4_length+$par(tw1)]
-                set seq_duration2 [expr $delay1_length+$delay4_length+$par(tw2)]
-                set seq_duration3 [expr $delay1_length_extra+$delay2_length+$par(tw3)]
+                # puts "Delay 1: $delay1_length"
+                # puts "Delay 2: $delay2_length"
+                # puts "Delay 2 short: $delay2_short_length"
+                # puts "Delay 3: 0"
+                # puts "Delay 4: $delay4_length"
+                # puts "Delay 4 short: $delay4_short_length"
+
+                set par(seq_duration) [expr $delay1_length+$delay2_length+$delay4_length]
+                # puts "Sequence duration: $par(seq_duration)"
                 
-                set rfsh_combined [shape_add [list [shape2list $rfsh1] $delay2 $delay4] \
-                                            [list $delay1 [shape2list $rfsh2] $delay4]]
-                set rfsh_combined [list2shape [shape_add [list $rfsh_combined] \
-                                                        [list $delay1_extra $delay2 [shape2list $rfsh3]]]]
+                set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay4]\
+                                            [list $delay1 $rfsh2 $delay4_short]]
+                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
+                set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
+                                                        [list $delay1 $delay2 $rfsh3]]]
+                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
+            save_shape $rfsh_combined combined.shape
 
             printwave $rfsh_shape1 1
             printwave $rfsh_shape2 2
             printwave $rfsh_shape3 3
             printwave [shape2list $rfsh_combined] _combined
 
-            save_shape $rfsh1 $par(filename).simpson1
-            save_shape $rfsh2 $par(filename).simpson2
-            save_shape $rfsh3 $par(filename).simpson3
+            save_shape [list2shape $rfsh1] $par(filename).simpson1
+            save_shape [list2shape $rfsh2] $par(filename).simpson2
+            save_shape [list2shape $rfsh3] $par(filename).simpson3
             save_shape $rfsh_combined $par(filename).simpson_combined
         }
 
@@ -1550,6 +1609,7 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
                         f"Offset Stepsize = {ss_offset} \n"
+                        f"Compression = {compression} \n"
                         f"delta1 = {delta1} \n"
                         f"delta2 = {delta2} \n"
                         f"delta3 = {delta3} \n"
