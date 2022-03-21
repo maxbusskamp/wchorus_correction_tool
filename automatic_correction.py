@@ -111,9 +111,9 @@ def create_simpson():  # Write simpson input files
         global par rfsh1 rfsh2 rfsh3 rfsh_combined argc argv
 
         lappend ::auto_path ./src/
-        if {![namespace exists shapetools_liquid]} {
-            package require shapetools_liquid
-            namespace import shapetools_liquid::*
+        if {![namespace exists basic_shapes]} {
+            package require basic_shapes
+            namespace import basic_shapes::*
         }
 
         # Read Arguments from commandline
@@ -215,54 +215,21 @@ def create_simpson():  # Write simpson input files
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
             set rfsh3 [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]
-        
-        
-        
-        
-
-
-
-
-
-        
-        
         } elseif {[string equal $par(type) "compressedCHORUS_cycled"]} {
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
-                
-                set testshape [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]
-                save_shape $testshape original.shape1
-            } else {
-                puts "Only useable with WURST shape"
-                exit
-            }
+            set rfsh1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]]
-            } else {
-                puts "Only useable with WURST shape"
-                exit
-            }
-
+            set rfsh2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]]
 
             # Set third WURST pulse (refocussing)
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
-
-            if {[string equal $par(shape_type) "WURST"]} {
-                set rfsh3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]]
-            } else {
-                puts "Only useable with WURST shape"
-                exit
-            }
+            set rfsh3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]]
 
             if {$par(compression) < $par(tau2)} {
                 set delay1_length       [expr $par(tw1)-$par(compression)]
@@ -321,15 +288,6 @@ def create_simpson():  # Write simpson input files
                 # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
             save_shape $rfsh_combined combined.shape
-
-
-
-
-
-
-
-
-
         } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
             # Set first WURST pulse (excitation)
@@ -631,7 +589,7 @@ def create_simpson():  # Write simpson input files
         } elseif {[string equal $shape_type "tanhpulse"]} {
             set shape [list2shape [tanhpulse $dur $rfmax $sweepwidth $var1 $var2 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         } elseif {[string equal $shape_type "hspulse"]} {
-            set shape [list2shape [hspulse $dur $rfmax $sweepwidth $var1 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
+            set shape [list2shape [hs $dur $rfmax $sweepwidth $var1 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         } elseif {[string equal $shape_type "caWURST"]} {
             set shape [list2shape [cawurst $dur $rfmax $sweepwidth $var1 -phase $phase -stepsize $stepsize -filename_phasecorrect $options(-filename_phasecorrect)]]
         } elseif {[string equal $shape_type "supergaussian"]} {
