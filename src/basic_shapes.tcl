@@ -13,7 +13,8 @@ namespace eval basic_shapes {
     tanhtan \
     hs \
     hahn_echo \
-    duration_check
+    duration_check \
+    shape_add
 
 
     ###########################################################################
@@ -453,6 +454,67 @@ namespace eval basic_shapes {
                 puts stderr "Shape cannot be resolved using this stepsize. Resulting number of points would be: $check"
                 exit 2
             }
+        }
+    }
+
+
+    ###########################################################################
+    # Proc to bitwise add two shape lists of the same length
+	#
+    # Changed 01.12.2020 by Max Busskamp:
+    #   - Version 1.0
+    #   - Version 1.1 Added safety check for list length
+    #   - Version 1.2 Fixed Phase Angle calculations
+    ###########################################################################
+    proc shape_add {shape_list1 shape_list2 args} {
+        array set options { -return_complex 0 -verbose 0 }
+        array set options $args
+        
+        set rf_shape1_list []
+        set rf_shape2_list []
+
+        foreach pulse $shape_list1 {
+            set rf_shape1_list [lappend rf_shape1_list {*}$pulse]
+        }
+
+        foreach pulse $shape_list2 {
+            set rf_shape2_list [lappend rf_shape2_list {*}$pulse]
+        }
+
+        set pi [expr 4.0*atan(1.0)]
+
+        set list_len1 [llength $rf_shape1_list]
+        set list_len2 [llength $rf_shape2_list]
+
+        if { $list_len1 == $list_len2 } {
+            for {set i 0} {$i < $list_len1} {incr i} {
+                set phase1 [lindex $rf_shape1_list $i 1]
+                set phase2 [lindex $rf_shape2_list $i 1]
+                set ampll1  [lindex $rf_shape1_list $i 0]
+                set ampll2  [lindex $rf_shape2_list $i 0]
+
+                set compl1_real [expr $ampll1*cos($phase1*2.0*$pi/360.0)]
+                set compl1_imag [expr $ampll1*sin($phase1*2.0*$pi/360.0)]
+                set compl2_real [expr $ampll2*cos($phase2*2.0*$pi/360.0)]
+                set compl2_imag [expr $ampll2*sin($phase2*2.0*$pi/360.0)]
+
+                set compl_real_sum [expr $compl1_real + $compl2_real]
+                set compl_imag_sum [expr $compl1_imag + $compl2_imag]
+
+                if {$options(-return_complex) == 0} {
+                    set ampl [expr hypot($compl_real_sum, $compl_imag_sum)]
+                    # We added 360degrees to get a correct WASP*MODLA Pulse. Please Check here if something seems wrong!
+                    set ph  [expr atan2($compl_imag_sum, $compl_real_sum)/$pi*180.0+360.0]
+                    set ph [expr fmod($ph,360)]
+
+                    lappend wavelist [format "%6.4f %6.4f" $ampl $ph]
+                } else {
+                    lappend wavelist [format "%6.4f %6.4f" $compl_real_sum $compl_imag_sum]
+                }
+            }
+            return $wavelist
+        } else {
+            puts "ERROR: Shapes have not the same size!"
         }
     }
 }
