@@ -111,9 +111,9 @@ def create_simpson():  # Write simpson input files
         global par rfsh1 rfsh2 rfsh3 rfsh_combined argc argv
 
         lappend ::auto_path ./src/
-        if {![namespace exists shapetools_liquid]} {
-            package require shapetools_liquid
-            namespace import shapetools_liquid::*
+        if {![namespace exists basic_shapes]} {
+            package require basic_shapes
+            namespace import basic_shapes::*
         }
 
         # Read Arguments from commandline

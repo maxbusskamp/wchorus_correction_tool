@@ -8,4 +8,4 @@
 # script is sourced, the variable $dir must contain the
 # full path name of this file's directory.
 
-package ifneeded shapetools_liquid 0.2 [list source [file join $dir shapetools_liquid.tcl]]
+package ifneeded basic_shapes 1.0 [list source [file join $dir basic_shapes.tcl]]
