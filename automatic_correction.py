@@ -822,7 +822,9 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
         phaseoff3,
         compression])
 
-    run(['rm', '-f', 'phasecorrection_liquid.tcl'])
+    if os.path.exists('phasecorrection_liquid.tcl'):
+        os.remove('phasecorrection_liquid.tcl')
+    # run(['rm', '-f', 'phasecorrection_liquid.tcl'])
     # run(['rm', '-f', filename_phasecorr])
     # run(['rm', '-f', glob.glob('*create_shapes_*.out')[0]])
 
@@ -1640,7 +1642,9 @@ while True:  # Event loop creating windows
             simulation_event, simulation_values = simulation_window.read()   # Read the event that happened and the values dictionary
             print(simulation_event, simulation_values)
             if simulation_event == sg.WIN_CLOSED or simulation_event == 'Exit':     # If user closed window with X or if user clicked "Exit" button then exit
-                run(['rm', '-f', 'sequence.png'])
+                if os.path.exists('sequence.png'):
+                    os.remove('sequence.png')
+                # run(['rm', '-f', 'sequence.png'])
                 break
             if simulation_event == 'Start Simulation':  # Starting simulations with input parameter
                 read_parameter(values['exp_type'], values['shape_type'])
