@@ -81,7 +81,7 @@ spinsys {
         global par rfsh1 rfsh2 rfsh3 rfsh_combined argc argv
 
         # Read Arguments from commandline
-        if { $argc != 32 } {
+        if { $argc != 33 } {
             puts "Wrong number of Inputs"
             puts "Please try again."
         } else {
@@ -115,8 +115,9 @@ spinsys {
             set par(phaseoff2)                  [lindex $argv 28]
             set par(phaseoff3)                  [lindex $argv 29]
             set par(compression)                [lindex $argv 30]
-            set par(phasecyclesteps)            [lindex $argv 31]}
-        set par(stepsize)   0.05         
+            set par(phasecyclesteps)            [lindex $argv 31]
+            set par(deadtime)                   [lindex $argv 32]}
+        set par(stepsize)   0.05
 
         set par(np_tau1)    [expr round($par(tau1)/$par(stepsize))]
         set par(np_tau2)    [expr round($par(tau2)/$par(stepsize))]
@@ -251,6 +252,8 @@ spinsys {
                 set rfsh_combined [list2shape [shape_add [list $rfsh_combined]                                                        [list $delay1 $delay2 $rfsh3]]]
                 # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
+            printwave [shape2list $rfsh_combined] _combined_before_$index
+            save_shape $rfsh_combined $par(filename).simpson_combined_before_$index
         } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
             # Set first WURST pulse (excitation)
@@ -409,6 +412,9 @@ spinsys {
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
             set rfsh3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]]
 
+            # Add deadtime before third pulse
+            set par(tau2)       [expr [lindex $argv 16]+$par(deadtime)]
+
             if {$par(compression) < $par(tau2)} {
                 set delay1_length       [expr $par(tw1)-$par(compression)]
                 set delay2_length       [expr $par(tw2)]
@@ -550,8 +556,6 @@ spinsys {
 
     ###########################################################################
     # Proc for empty, zero shape
-    # dur and stepsize are in us
-    # Version 1.0 Dec 2020 by MRH
     ###########################################################################
     proc zero_ampl {dur args} {
         array set options { -stepsize 0.05 -verbose 0 }
@@ -575,107 +579,34 @@ spinsys {
 
 
     ###########################################################################
-    # Proc for RECTANGULAR shape calculation
-    # 
-    # Changed 09.12.2020, MRH:
-    #   - Added option for offset
-    # 09.07.2019 by Max Busskamp
-    ###########################################################################
-    proc rectangular {dur rfmax args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 }
-        array set options $args
-        duration_check $dur $options(-stepsize) $options(-verbose)
-
-        set nsteps [expr round($dur/$options(-stepsize))]
-        
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set t [expr $options(-stepsize)*$i]
-            set ampl $rfmax
-            set ph [expr fmod(360.0e-6*$options(-offset)*$t+$options(-phase),360)]
-            set ph [expr fmod($ph+360.0,360)]
-            lappend wavelist [format "%6.4f %6.4f" $ampl $ph]
-        }
-        return $wavelist
-    }
-
-    ###########################################################################
-    # Proc for GAUSSIAN amplitude shape calculation
-    # dur is in us, rfmax in Hz
-    # fhwm (full width half maximum) in us
-    # Version 1.0 Mar 2022 by MRH
-    ###########################################################################
-    proc gaussian {dur rfmax args} {
-        set fwhm [expr $dur/2.0]
-        array set options { -fwhm $fwhm -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
-        array set options $args
-        duration_check $dur $options(-stepsize) $options(-verbose)
-        # Nedeed: option to specify the truncation level and recalculate fwhm
-        set nsteps [expr round($dur/$options(-stepsize))]
-        set mid [expr ($nsteps/2)*$options(-stepsize)]
-
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set t [expr $i*$options(-stepsize)]
-            set ampl [expr $rfmax*exp(-(4.0*log(2.0)*pow(($t-$mid),2)/(pow(-$options(-fwhm),2))))]
-            set ph [expr fmod(360.0e-6*$options(-offset)*$t+$options(-phase),360)]
-            set ph [expr fmod($ph+360.0,360)]
-            lappend wavelist [format "%6.4f %6.4f" $ampl $ph]
-        }
-        return $wavelist
-    }
-
-    ###########################################################################
-    # Proc for SINC amplitude shape calculation
-    # dur is in us, rfmax in Hz
-    # N is the number of zero crossings (sinc3 or sinc5)
-    # Version 1.0 Mar 2022 by MRH
-    ###########################################################################
-    proc sinc {dur rfmax N args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
-        array set options $args
-        duration_check $dur $options(-stepsize) $options(-verbose)
-        set pi [expr 4.0*atan(1.0)]
-        set nsteps [expr round($dur/$options(-stepsize))]
-        set mid [expr ($nsteps/2)*$options(-stepsize)]
-        
-        for {set i 1} {$i <= $nsteps} {incr i} {
-            set t [expr $i*$options(-stepsize)]
-            if {$t == $mid} {
-                set ampl $rfmax
-            } else {
-                set x [expr 2.0*$pi*($t-$mid)/$N]
-                set ampl [expr $rfmax*sin($x)/$x]
-            }
-            if {$ampl < 0} {
-                #set ampl [expr abs($ampl)]
-                set phadd 180.0
-            } else {
-                set phadd 0.0
-            }
-            set ph [expr fmod(360.0e-6*$options(-offset)*$t+$options(-phase)+$phadd,360)]
-            set ph [expr fmod($ph+360.0,360)]
-            lappend wavelist [format "%6.4f %6.4f" $ampl $ph]
-        }
-        return $wavelist
-    }
-    ###########################################################################
     # Proc for WURST shape calculation
-	#
-    # Changed 20.01.2020 by Max Busskamp:
-    #   - Added Option for Phasecycle
-    #   - Added rfmax to input variables
-    #   - Added default values for stepsize, direction and offset
     ###########################################################################
     proc wurst {dur rfmax Delta N args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
+        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 -filename_phasecorrect none }
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
 
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($dur/$options(-stepsize))]
 
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr "
+"]
+            # puts $phasecorr_list
+        }
+
         for {set i 1} {$i <= $nsteps} {incr i} {
+            set j [expr $i-1]
+
             set ampl [expr $rfmax*(1.0-abs(pow(cos(($pi*$options(-stepsize)*$i)/($dur)),$N)))]
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            } else {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
             } elseif {$options(-direction) == 0} {
@@ -692,19 +623,19 @@ spinsys {
 
     ###########################################################################
     # Proc for caWURST shape calculation 
-	# Version 1.0 by JK
-	#
-    # Changed 16.08.2020 by Max Busskamp:
-	#   - Fixed changin sweepwidth
-	#   - Checked Direction
-	#   - Added constant phase offset to enable phasecycling
-    #   - Added rfmax to input variables
-    #   - Added default values for stepsize, direction and offset
     ###########################################################################
     proc cawurst {dur rfmax Delta N args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
+        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 -filename_phasecorrect none }
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
+
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr "
+"]
+        }
 
         #Variables
         set pi2 		[expr (4*atan(1))/2]
@@ -788,6 +719,7 @@ spinsys {
             exit 2
         }
 
+        set index2 0
         for {set j 1} {$j < $nsp} {incr j} {
             set index [expr $freqlist_length-$j]
             if {$index < 0} {
@@ -800,9 +732,14 @@ spinsys {
             set ampl		[lindex $ampllist $index]
             set freq_help 	[lindex $freqlist $index]
             set freq 		[expr $help*$freq_help]
-            set phase		[lindex $phaselist $index]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set phase	[lindex $phaselist $index]
+            } else {
+                set phase	[expr fmod([lindex $phaselist $index]-[lindex $phasecorr_list $index2 0],360)]
+            }
 
             lappend wavelist [format "%6.4f %6.4f" $ampl $phase]
+            incr index2
         }
         return $wavelist
     }
@@ -810,22 +747,34 @@ spinsys {
 
     ###########################################################################
     # Proc for supergaussian shape calculation
-    # Version 1 16.09.2020 by Max Busskamp:
     ###########################################################################
     proc supergaussian {dur rfmax Delta N G args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
+        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 -filename_phasecorrect none }
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
         
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr round($dur/$options(-stepsize))]
 
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr "
+"]
+        }
+
         # t = $options(-stepsize)*$i
         for {set i 1} {$i <= $nsteps} {incr i} {
+            set j [expr $i-1]
 
             set ampl [expr $rfmax*exp(-1.0*pow(2,($N+2))*pow(((($options(-stepsize)*$i)-$G)/($dur)),$N))]
 
-            set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)]
+            } else {
+                set ph [expr ((180.0/$pi)*2.0*$pi*(($options(-offset)*1e3+($Delta*1e3/2.0))*$options(-stepsize)*1e-6*$i-($Delta*1e3/(2.0*$dur*1e-6))*pow($options(-stepsize)*1e-6*$i,2)))+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
             } elseif {$options(-direction) == 0} {
@@ -842,12 +791,19 @@ spinsys {
 
     ###########################################################################
     # Proc for tanh/tan shape calculation
-    # Version 1.0 Max Busskampl 21.09.2019
     ###########################################################################
     proc tanhtan {dur rfmax Delta zeta tan_kappa args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -direction 0 }
+        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -direction 0 -filename_phasecorrect none }
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
+
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr "
+"]
+        }
 
         set pi [expr 4.0*atan(1.0)]
         set nsteps [expr int(round($dur/$options(-stepsize)))]
@@ -858,12 +814,17 @@ spinsys {
         set phi_max [expr -(($A*$dur/1000000.0)/(2*$kappa*$tan_kappa))*log(cos($kappa))]
 
         for {set i 1} {$i <= $nsteps} {incr i} {
+            set j [expr $i-1]
             if {$i <= $nsteps/2} {
                 set ampl [expr $rfmax*tanh((2*$i*$options(-stepsize)*$zeta)/$dur)]
             } else {
                 set ampl [expr $rfmax*tanh((2*$zeta*(1.0-(($i*$options(-stepsize))/$dur))))]
             }
-            set ph [expr ($phi_max-(($A*$dur/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$options(-stepsize)/1000000.0)/($dur/1000000.0))/cos($kappa)))*180/$pi+$options(-phase)]
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr ($phi_max-(($A*$dur/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$options(-stepsize)/1000000.0)/($dur/1000000.0))/cos($kappa)))*180/$pi+$options(-phase)]
+            } else {
+                set ph [expr ($phi_max-(($A*$dur/1000000.0)/(2*$kappa*$tan_kappa))*log(cos((2*$kappa*($i-($nsteps/2))*$options(-stepsize)/1000000.0)/($dur/1000000.0))/cos($kappa)))*180/$pi+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
             } elseif {$options(-direction) == 0} {
@@ -881,21 +842,33 @@ spinsys {
 
     ###########################################################################
     # Proc for HS shape calculation
-    # Version 1.1 MRH Sept 2016
     ###########################################################################
     proc hs {dur rfmax Delta beta args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 }
+        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 -direction 0 -filename_phasecorrect none }
         array set options $args
         duration_check $dur $options(-stepsize) $options(-verbose)
+
+        if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+        } else {
+            set phasecorr_file  [open $options(-filename_phasecorrect)]
+            set phasecorr       [read $phasecorr_file]
+            set phasecorr_list  [split $phasecorr "
+"]
+        }
 
         set nsteps [expr round($dur/$options(-stepsize))]
         set phi0 [expr 180.0*$Delta*1000*$dur/10.6e6]
 
         for {set i 1} {$i <= $nsteps} {incr i} {
+            set j [expr $i-1]
+
             set x [expr cosh($beta*(2*$i*$options(-stepsize)/$dur-1))]
             set ampl [expr $rfmax/$x]
-            set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)]
-
+            if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
+                set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)]
+            } else {
+                set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)+[lindex $phasecorr_list $j 0]]
+            }
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
             } elseif {$options(-direction) == 0} {
@@ -912,73 +885,13 @@ spinsys {
 
 
     ###########################################################################
-    # Proc for a simple Hahn echo; dur is total duration (t-p180-t) with p180 centered; phase and offset applies to p180.
-    # dur and stepsize are in us; offset in Hz; rfmax in kHz
-    # Version 1.0 Dec 2020 by MRH
-    # Version 1.1 Nov 2021 by JB fixed rf power (Hz instead of kHz)
-    ###########################################################################
-    proc hahn_echo {dur rfmax args} {
-        array set options { -stepsize 0.05 -verbose 0 -phase 0.0 -offset 0.0 }
-        array set options $args
-        duration_check $dur $options(-stepsize) $options(-verbose)
-        
-        set i 1
-        set j 1
-        set nsteps [expr round($dur/$options(-stepsize))]
-        set p180 [expr 1e6/(2.0*$rfmax)]
-        set p180steps [expr round($p180/$options(-stepsize))]
-        set delsteps [expr ($nsteps-$p180steps)/2]
-        set checkduration [expr (2*$delsteps+$p180steps)*$options(-stepsize)]
-
-        # check if total duration is possible with the selected rfmax
-        if {$checkduration != $dur} {
-            puts "Error: hahn_echo, p180 ($p180 us) cannot centered "
-            puts "be digitized with the chosen stepsize ($options(-stepsize) us)"
-            puts "Please adjust dur ($dur us), stepsize ($options(-stepsize) us) or rfmax ($rfmax Hz)!"
-            puts "check: $checkduration us"
-            exit
-        }
-
-        # first half echo
-        while {$j <= $delsteps} {
-            set ampl 0.0
-            set ph 0.0
-            lappend wavelist [format "%.6f %.6f" $ampl $ph]
-            incr j
-        }
-        set j 1
-
-        # make 180 pulse
-        while {$i <= $p180steps} {
-            set t [expr ($delsteps+$i)*$options(-stepsize)]
-            set ampl $rfmax
-            set ph [expr fmod(360.0e-6*$options(-offset)*$t+$options(-phase),360)]
-            set ph [expr fmod($ph+360.0,360)]
-            lappend wavelist [format "%.6f %.6f" $ampl $ph]
-            incr i
-        }
-
-        # second half echo
-        while {$j <= $delsteps} {
-            set ampl 0.0
-            set ph 0.0
-            lappend wavelist [format "%.6f %.6f" $ampl $ph]
-            incr j
-        }
-        return $wavelist
-    }
-
-
-    ###########################################################################
-    # Proc to calculate the frequency profile of shapefiles
-    # Version 1.0, MRH Dec 2020
+    # Proc to check if the given duration is an even divider of the stepsize
     ###########################################################################
     proc duration_check {dur stepsize {verbose 0}} {
         set check [expr $dur/$stepsize]
         if {$check == floor($check)} {
             if {$verbose == 1} {
-                # should the number of points not be an integer?
-                puts [format "Shape can be resolved. Resulting number of points: %s" $check]
+                puts "Shape can be resolved. Resulting number of points: $check"
             }
         } else {
             if {$verbose == 1} {
@@ -991,11 +904,6 @@ spinsys {
 
     ###########################################################################
     # Proc to bitwise add two shape lists of the same length
-	#
-    # Changed 01.12.2020 by Max Busskamp:
-    #   - Version 1.0
-    #   - Version 1.1 Added safety check for list length
-    #   - Version 1.2 Fixed Phase Angle calculations
     ###########################################################################
     proc shape_add {shape_list1 shape_list2 args} {
         array set options { -return_complex 0 -verbose 0 }
@@ -1052,7 +960,6 @@ spinsys {
 
     ###########################################################################
     # Proc to read file into list
-    # Changed 08.06.2020 by Max Bußkamp:
     ###########################################################################
     proc listFromFile {filename} {
         set f [open $filename r]
@@ -1086,7 +993,6 @@ spinsys {
 
     ###########################################################################
     # Proc for generating an output file from shapes
-    # 09.07.2019 by Max Bußkamp
     ###########################################################################
     proc printwave {wave counter} {
         global par
