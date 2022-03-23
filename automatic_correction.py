@@ -111,7 +111,7 @@ def create_simpson():  # Write simpson input files
         global par rfsh1 rfsh2 rfsh3 rfsh_combined argc argv
 
         # Read Arguments from commandline
-        if { $argc != 31 } {
+        if { $argc != 32 } {
             puts "Wrong number of Inputs"
             puts "Please try again."
         } else {
@@ -144,7 +144,8 @@ def create_simpson():  # Write simpson input files
             set par(phaseoff1)                  [lindex $argv 27]
             set par(phaseoff2)                  [lindex $argv 28]
             set par(phaseoff3)                  [lindex $argv 29]
-            set par(compression)                [lindex $argv 30]}
+            set par(compression)                [lindex $argv 30]
+            set par(phasecyclesteps)            [lindex $argv 31]}
         set par(stepsize)   0.05         
 
         set par(np_tau1)    [expr round($par(tau1)/$par(stepsize))]
@@ -167,12 +168,15 @@ def create_simpson():  # Write simpson input files
         if {[string first "create_shapes_" $par(type)] == 0} {
             set offset_value_list { 0 }
             set par(phasecycles) 1
+            if {[string equal $par(type) "create_shapes_compressedCHORUS_cycled"]} {
+                set par(phasecycles) $par(phasecyclesteps)
+            }
         } elseif {[string equal $par(type) "double_chirp"]} {
             set par(phasecycles) 4
         } elseif {[string equal $par(type) "CHORUS_cycled"]} {
             set par(phasecycles) 16
         } elseif {[string equal $par(type) "compressedCHORUS_cycled"]} {
-            set par(phasecycles) 4
+            set par(phasecycles) $par(phasecyclesteps)
         } elseif {[string equal $par(type) "SHAPEsingle"]} {
             set par(phasecycles) 1
         } elseif {[string equal $par(type) "CHORUS"]} {
@@ -281,7 +285,6 @@ def create_simpson():  # Write simpson input files
                                                         [list $delay1 $delay2 $rfsh3]]]
                 # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
-            save_shape $rfsh_combined combined.shape
         } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
             # Set first WURST pulse (excitation)
@@ -428,20 +431,17 @@ def create_simpson():  # Write simpson input files
             # Set first WURST pulse (excitation)
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
-            set rfsh1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
-            set rfsh_shape1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) 100 $par(var11) $par(var12) $par(phaseoff1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
+            set rfsh1 [shape2list [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize) -filename_phasecorrect $par(filename_phasecorrect)]]
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
             set par(rf2) [format "%.2f" [expr $par(rf_factor2)*sqrt($par(sweep_rate2))]]
-            set rfsh2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
-            set rfsh_shape2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) 100 $par(var21) $par(var22) $par(phaseoff2) $par(stepsize)]]
+            set rfsh2 [shape2list [pulsegen $par(shape_type) $par(tw2) $par(Delta2) $par(rf2) $par(var21) $par(var22) $par(ph2) $par(stepsize)]]
 
             # Set third WURST pulse (refocussing)
             set par(sweep_rate3) [expr ($par(Delta3)*1e3)/($par(tw3)*1e-6)]
             set par(rf3) [format "%.2f" [expr $par(rf_factor3)*sqrt($par(sweep_rate3))]]
-            set rfsh3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf2) $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]]
-            set rfsh_shape3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) 100 $par(var31) $par(var32) $par(phaseoff3) $par(stepsize)]]
+            set rfsh3 [shape2list [pulsegen $par(shape_type) $par(tw3) $par(Delta3) $par(rf3) $par(var31) $par(var32) $par(ph3) $par(stepsize)]]
 
             if {$par(compression) < $par(tau2)} {
                 set delay1_length       [expr $par(tw1)-$par(compression)]
@@ -499,17 +499,9 @@ def create_simpson():  # Write simpson input files
                                                         [list $delay1 $delay2 $rfsh3]]]
                 # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
-            save_shape $rfsh_combined combined.shape
 
-            printwave $rfsh_shape1 1
-            printwave $rfsh_shape2 2
-            printwave $rfsh_shape3 3
-            printwave [shape2list $rfsh_combined] _combined
-
-            save_shape [list2shape $rfsh1] $par(filename).simpson1
-            save_shape [list2shape $rfsh2] $par(filename).simpson2
-            save_shape [list2shape $rfsh3] $par(filename).simpson3
-            save_shape $rfsh_combined $par(filename).simpson_combined
+            printwave [shape2list $rfsh_combined] _combined_$index
+            save_shape $rfsh_combined $par(filename).simpson_combined_$index
         }
 
             foreach offset_value        $offset_value_list {
@@ -1200,6 +1192,8 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
     global phaseoff1
     global phaseoff2
     global phaseoff3
+    global rfmax
+    global phasecyclesteps
 
     run(['simpson',
             'phasecorrection_liquid.tcl',
@@ -1232,7 +1226,8 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
             phaseoff1,
             phaseoff2,
             phaseoff3,
-            compression])
+            compression,
+            phasecyclesteps])
 
     # filename_phasecorr = glob.glob('*.out')[0]
     filename_phasecorr = filename + '.out'
@@ -1316,7 +1311,16 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
         phaseoff1,
         phaseoff2,
         phaseoff3,
-        compression])
+        compression,
+        phasecyclesteps])
+
+
+    shapefile = np.genfromtxt(filename+'.shape_combined_0', delimiter=', ', comments='##')
+    rfmax = np.max(shapefile[:,0])
+    simpson_infofile = open(filename + '.info', 'a')
+    simpson_infofile.write('Maximum RF Power for complete shape: '+str(rfmax))
+    simpson_infofile.close()
+
 
     if os.path.exists('phasecorrection_liquid.tcl'):
         os.remove('phasecorrection_liquid.tcl')
@@ -1456,6 +1460,8 @@ def exp_layout(exp_type, shape_type):  #Generate a CHORUS Layout
                 [sg.Input(key='delta1', size=(15,1))],
                 [sg.Text('Compression Offset (us):'), sg.Text(size=(15,1), key='compression_out')],
                 [sg.Input(key='compression', size=(15,1))],
+                [sg.Text('Phasecycle Steps:'), sg.Text(size=(15,1), key='phasecyclesteps_out')],
+                [sg.Input(key='phasecyclesteps', size=(15,1))],
                 [sg.Text('Offset Stepsize (Hz):'), sg.Text(size=(10,1), key='ss_offset_out')],
                 [sg.Input(key='ss_offset', size=(10,1))],
                 [sg.Button('Start Simulation'), sg.Button('Exit')]]
@@ -1689,6 +1695,8 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
     global phaseoff1
     global phaseoff2
     global phaseoff3
+    global rfmax
+    global phasecyclesteps
 
     if(exp_type == 'CHORUS') or (exp_type == 'CHORUS_cycled'):  # define CHORUS parameter
 
@@ -1707,6 +1715,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         tau2         = '{:.1f}'.format(float(tw1)/2.0)
         tw2          = '{:.1f}'.format(float(tau2)+float(tw3))
         rffactor2    = rffactor3
+        rfpower1     = '{:.2f}'.format(float(rffactor1)*np.sqrt(float(delta1)*1e3/float(tw1)*1e-6))
+        rfpower2     = '{:.2f}'.format(float(rffactor2)*np.sqrt(float(delta2)*1e3/float(tw2)*1e-6))
+        rfpower3     = '{:.2f}'.format(float(rffactor3)*np.sqrt(float(delta3)*1e3/float(tw3)*1e-6))
         if(shape_type == 'supergaussian'):
             var21           = var31
             var22           = simulation_values['var22']
@@ -1752,6 +1763,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
                         f"rffactor3 = {rffactor3} \n"
+                        f"rfpower1 = {rfpower1} \n"
+                        f"rfpower2 = {rfpower2} \n"
+                        f"rfpower3 = {rfpower3} \n"
                         f"phaseoff1 = {phaseoff1} \n"
                         f"phaseoff2 = {phaseoff2} \n"
                         f"phaseoff3 = {phaseoff3} \n"
@@ -1813,6 +1827,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         phaseoff1       = simulation_values['phaseoff1']
         phaseoff2       = simulation_values['phaseoff2']
         phaseoff3       = simulation_values['phaseoff3']
+        rfpower1     = '{:.2f}'.format(float(rffactor1)*np.sqrt(float(delta1)*1e3/float(tw1)*1e-6))
+        rfpower2     = '{:.2f}'.format(float(rffactor2)*np.sqrt(float(delta2)*1e3/float(tw2)*1e-6))
+        rfpower3     = '{:.2f}'.format(float(rffactor3)*np.sqrt(float(delta3)*1e3/float(tw3)*1e-6))
 
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
@@ -1826,6 +1843,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
                         f"rffactor3 = {rffactor3} \n"
+                        f"rfpower1 = {rfpower1} \n"
+                        f"rfpower2 = {rfpower2} \n"
+                        f"rfpower3 = {rfpower3} \n"
                         f"phaseoff1 = {phaseoff1} \n"
                         f"phaseoff2 = {phaseoff2} \n"
                         f"phaseoff3 = {phaseoff3} \n"
@@ -1895,6 +1915,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         phaseoff1       = simulation_values['phaseoff1']
         phaseoff2       = simulation_values['phaseoff2']
         phaseoff3       = simulation_values['phaseoff3']
+        rfpower1     = '{:.2f}'.format(float(rffactor1)*np.sqrt(float(delta1)*1e3/float(tw1)*1e-6))
+        rfpower2     = '{:.2f}'.format(float(rffactor2)*np.sqrt(float(delta2)*1e3/float(tw2)*1e-6))
+        rfpower3     = '{:.2f}'.format(float(rffactor3)*np.sqrt(float(delta3)*1e3/float(tw3)*1e-6))
 
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
@@ -1908,6 +1931,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
                         f"rffactor3 = {rffactor3} \n"
+                        f"rfpower1 = {rfpower1} \n"
+                        f"rfpower2 = {rfpower2} \n"
+                        f"rfpower3 = {rfpower3} \n"
                         f"phaseoff1 = {phaseoff1} \n"
                         f"phaseoff2 = {phaseoff2} \n"
                         f"phaseoff3 = {phaseoff3} \n"
@@ -1944,6 +1970,7 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         var12           = simulation_values['var12']
         ss_offset    = simulation_values['ss_offset']
         phaseoff1       = simulation_values['phaseoff1']
+        rfpower1     = '{:.2f}'.format(float(rffactor1)*np.sqrt(float(delta1)*1e3/float(tw1)*1e-6))
 
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
@@ -1951,6 +1978,7 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"delta1 = {delta1} \n"
                         f"tw1 = {tw1} \n"
                         f"rffactor1 = {rffactor1} \n"
+                        f"rfpower1 = {rfpower1} \n"
                         f"phaseoff1 = {phaseoff1} \n"
                         f"Parameter: \n"
                         f"If shape_type is WURST: \n"
@@ -1974,6 +2002,8 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         ss_offset    = simulation_values['ss_offset']
         phaseoff1       = simulation_values['phaseoff1']
         phaseoff2       = simulation_values['phaseoff2']
+        rfpower1     = '{:.2f}'.format(float(rffactor1)*np.sqrt(float(delta1)*1e3/float(tw1)*1e-6))
+        rfpower2     = '{:.2f}'.format(float(rffactor2)*np.sqrt(float(delta2)*1e3/float(tw2)*1e-6))
 
         simulation_window['delta1_out'].update(simulation_values['delta1'])
         simulation_window['delta2_out'].update(delta2)
@@ -1999,6 +2029,8 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"tw2 = {tw2} \n"
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
+                        f"rfpower1 = {rfpower1} \n"
+                        f"rfpower2 = {rfpower2} \n"
                         f"phaseoff1 = {phaseoff1} \n"
                         f"phaseoff2 = {phaseoff2} \n"
                         f"tau1 = {tau1} \n"
@@ -2012,22 +2044,28 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"var21 = {var21} \n"
                         f"var22 = {var22} \n")
     elif(exp_type == 'compressedCHORUS_cycled'):  # define double_chirp parameter
-        delta1       = simulation_values['delta1']
-        delta2       = simulation_values['delta1']
-        delta3       = simulation_values['delta1']
-        compression  = simulation_values['compression']
-        tw1          = simulation_values['tw1']
-        tw3          = simulation_values['tw3']
-        rffactor1    = simulation_values['rffactor1']
-        rffactor3    = simulation_values['rffactor3']
-        var11        = simulation_values['var11']
-        var12        = simulation_values['var12']
-        var31        = simulation_values['var31']
-        var32        = simulation_values['var32']
-        ss_offset    = simulation_values['ss_offset']
-        tau2         = '{:.1f}'.format(float(tw1)/2.0)
-        tw2          = '{:.1f}'.format(float(tau2)+float(tw3))
-        rffactor2    = rffactor3
+        delta1          = simulation_values['delta1']
+        delta2          = simulation_values['delta1']
+        delta3          = simulation_values['delta1']
+        compression     = simulation_values['compression']
+        tw1             = simulation_values['tw1']
+        tw3             = simulation_values['tw3']
+        rffactor1       = simulation_values['rffactor1']
+        rffactor3       = simulation_values['rffactor3']
+        var11           = simulation_values['var11']
+        var12           = simulation_values['var12']
+        var31           = simulation_values['var31']
+        var32           = simulation_values['var32']
+        ss_offset       = simulation_values['ss_offset']
+        tau2            = '{:.1f}'.format(float(tw1)/2.0)
+        tw2             = '{:.1f}'.format(float(tau2)+float(tw3))
+        rffactor2       = rffactor3
+        rfpower1        = '{:.2f}'.format(float(rffactor1)*np.sqrt(float(delta1)*1e3/float(tw1)*1e-6))
+        rfpower2        = '{:.2f}'.format(float(rffactor2)*np.sqrt(float(delta2)*1e3/float(tw2)*1e-6))
+        rfpower3        = '{:.2f}'.format(float(rffactor3)*np.sqrt(float(delta3)*1e3/float(tw3)*1e-6))
+        sequence_dur    = '{:.0f}'.format(float(tw1)+float(tw2)+float(tw3)+float(tau2)-2*float(compression))
+        phasecyclesteps = simulation_values['phasecyclesteps']
+
         if(shape_type == 'supergaussian'):
             var21           = var31
             var22           = simulation_values['var22']
@@ -2061,11 +2099,14 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         simulation_window['var31_out'].update(simulation_values['var31'])
         simulation_window['var32_out'].update(simulation_values['var32'])
         simulation_window['ss_offset_out'].update(simulation_values['ss_offset'])
+        simulation_window['phasecyclesteps_out'].update(simulation_values['phasecyclesteps'])
 
         simpson_info = (f"Experiment = {exp_type} \n"
                         f"Shape = {shape_type} \n"
+                        f"Duration of full sequence = {sequence_dur} \n"
                         f"Offset Stepsize = {ss_offset} \n"
                         f"Compression = {compression} \n"
+                        f"phasecyclesteps = {phasecyclesteps} \n"
                         f"delta1 = {delta1} \n"
                         f"delta2 = {delta2} \n"
                         f"delta3 = {delta3} \n"
@@ -2075,6 +2116,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
                         f"rffactor1 = {rffactor1} \n"
                         f"rffactor2 = {rffactor2} \n"
                         f"rffactor3 = {rffactor3} \n"
+                        f"rfpower1 = {rfpower1} \n"
+                        f"rfpower2 = {rfpower2} \n"
+                        f"rfpower3 = {rfpower3} \n"
                         f"phaseoff1 = {phaseoff1} \n"
                         f"phaseoff2 = {phaseoff2} \n"
                         f"phaseoff3 = {phaseoff3} \n"
@@ -2097,33 +2141,39 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
     simpson_infofile.close()
 
 # Declare Parameter
-filename     = '0'
-compression  = '0'
-delta1       = '0'
-delta2       = '0'
-delta3       = '0'
-tw1          = '0'
-tw2          = '0'
-tw3          = '0'
-rffactor1    = '0'
-rffactor2    = '0'
-rffactor3    = '0'
-tau1         = '0'
-tau2         = '0'
-tau3         = '0'
-ss_offset    = '0'
-var11        = '0'
-var12        = '0'
-var13        = '0'
-var21        = '0'
-var22        = '0'
-var23        = '0'
-var31        = '0'
-var32        = '0'
-var33        = '0'
-phaseoff1    = '0'
-phaseoff2    = '0'
-phaseoff3    = '0'
+filename        = '0'
+compression     = '0'
+delta1          = '0'
+delta2          = '0'
+delta3          = '0'
+tw1             = '0'
+tw2             = '0'
+tw3             = '0'
+rffactor1       = '0'
+rffactor2       = '0'
+rffactor3       = '0'
+tau1            = '0'
+tau2            = '0'
+tau3            = '0'
+ss_offset       = '0'
+var11           = '0'
+var12           = '0'
+var13           = '0'
+var21           = '0'
+var22           = '0'
+var23           = '0'
+var31           = '0'
+var32           = '0'
+var33           = '0'
+phaseoff1       = '0'
+phaseoff2       = '0'
+phaseoff3       = '0'
+rfpower1        = '0'
+rfpower2        = '0'
+rfpower3        = '0'
+rfmax           = '0'
+phasecyclesteps = '0'
+
 # Create Sequence Selection Window
 sequence_selection = sg.Window('Phasecorrection Tool', selection_layout(), grab_anywhere=True)
 
