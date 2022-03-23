@@ -991,19 +991,20 @@ def create_simpson():  # Write simpson input files
         global par
         set filename $par(filename).shape$counter
         if {[file exists $filename]} {
-        puts "Warning: $filename exists and will be overwritten!"
+            puts "Warning: $filename exists and will be overwritten!"
         }
         set fp [open $filename w]
         set np [llength $wave]
+        set pulselength [expr $np*$par(stepsize)]
         
-        puts $fp "##TITLE= WURST-${par(var11)} shape (duration $par(tw1) us, sweep width $par(Delta1) kHz, step size: 0.05 us, sweep rate: $par(sweep_rate1) MHz/ms)"
-        puts $fp "##USAGE= WURST pulse for inversion and excitation"
+        puts $fp "##TITLE= $par(shape_type)-${par(var11)} shape (duration $pulselength us, sweep width $par(Delta1) kHz, step size: $par(stepsize) us, sweep rate: $par(sweep_rate1) MHz/ms)"
+        puts $fp "##USAGE= $par(shape_type) pulse for inversion and excitation"
         puts $fp "##JCAMP-DX= 5.00 \$\$ Bruker JCAMP library"
         puts $fp "##DATA TYPE= Shape Data"
-        puts $fp "##ORIGIN= Generated from wurst program"
+        puts $fp "##ORIGIN= automatic_correction.py"
         puts $fp "##DATE= "
         puts $fp "##TIME= "
-        puts $fp "##\$SHAPE_PARAMETERS= Type: Wurst ; Total Sweep-Width \[Hz\] [expr $par(Delta1)*1000.0] ; Length of Pulse \[usec\] [expr 1.0*$par(tw1)] ; Amplitude Power Index ${par(var11)}.0 ; 1=High to low field, -1=Low to high field 1"
+        puts $fp "##\$SHAPE_PARAMETERS= Type: $par(shape_type) ; Total Sweep-Width \[Hz\] [expr $par(Delta1)*1000.0] ; Length of Pulse \[usec\] [expr 1.0*$par(tw1)] ; Amplitude Power Index ${par(var11)}.0 ; 1=High to low field, -1=Low to high field 1"
         puts $fp "##MINX= 0.000000e+00"
         puts $fp "##MAXX= 1.000000e+02"
         puts $fp "##MINY= 0.000000e+00"
@@ -1018,7 +1019,7 @@ def create_simpson():  # Write simpson input files
         puts $fp "##XYPOINTS= (XY..XY)"
 
         foreach l $wave {
-        puts $fp [format "%.6e, %.6e" [lindex $l 0] [lindex $l 1]]
+            puts $fp [format "%.6e, %.6e" [lindex $l 0] [lindex $l 1]]
         }
         puts $fp "##END= "
         close $fp
