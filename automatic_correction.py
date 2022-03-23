@@ -242,21 +242,12 @@ def create_simpson():  # Write simpson input files
                 set delay3              [zero_ampl $delay3_length]
                 set delay4              [zero_ampl $delay4_length]
 
-                # puts "Delay 1:$delay1_length"
-                # puts "Delay 2:$delay2_length"
-                # puts "Delay 2 short:$delay2_short_length"
-                # puts "Delay 3:$delay3_length"
-                # puts "Delay 4:$delay4_length"
-
                 set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$par(tw3)]
-                # puts "Sequence duration: $par(seq_duration)"
 
                 set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay3 $delay4]\
                                             [list $delay1 $rfsh2 $delay3 $delay4]]
-                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
                 set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
                                                         [list $delay1 $delay2 $delay3 $rfsh3]]]
-                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             } else {
                 set delay1_length       [expr $par(tw1)-$par(compression)]
                 set delay2_length       [expr $par(tw2)-($par(compression)-$par(tau2))]
@@ -269,25 +260,13 @@ def create_simpson():  # Write simpson input files
                 set delay4              [zero_ampl $delay4_length]
                 set delay4_short        [zero_ampl $delay4_short_length]
 
-                # puts "Delay 1: $delay1_length"
-                # puts "Delay 2: $delay2_length"
-                # puts "Delay 2 short: $delay2_short_length"
-                # puts "Delay 3: 0"
-                # puts "Delay 4: $delay4_length"
-                # puts "Delay 4 short: $delay4_short_length"
-
                 set par(seq_duration) [expr $delay1_length+$delay2_length+$delay4_length]
-                # puts "Sequence duration: $par(seq_duration)"
                 
                 set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay4]\
                                             [list $delay1 $rfsh2 $delay4_short]]
-                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
                 set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
                                                         [list $delay1 $delay2 $rfsh3]]]
-                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
-            printwave [shape2list $rfsh_combined] _combined_before_$index
-            save_shape $rfsh_combined $par(filename).simpson_combined_before_$index
         } elseif {[string equal $par(type) "loadshape_double_echo"]} {
 
             # Set first WURST pulse (excitation)
@@ -461,21 +440,12 @@ def create_simpson():  # Write simpson input files
                 set delay3              [zero_ampl $delay3_length]
                 set delay4              [zero_ampl $delay4_length]
 
-                # puts "Delay 1:$delay1_length"
-                # puts "Delay 2:$delay2_length"
-                # puts "Delay 2 short:$delay2_short_length"
-                # puts "Delay 3:$delay3_length"
-                # puts "Delay 4:$delay4_length"
-
                 set par(seq_duration) [expr $delay1_length+$delay2_length+$delay3_length+$par(tw3)]
-                # puts "Sequence duration: $par(seq_duration)"
 
                 set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay3 $delay4]\
                                             [list $delay1 $rfsh2 $delay3 $delay4]]
-                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
                 set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
                                                         [list $delay1 $delay2 $delay3 $rfsh3]]]
-                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             } else {
                 set delay1_length       [expr $par(tw1)-$par(compression)]
                 set delay2_length       [expr $par(tw2)-($par(compression)-$par(tau2))]
@@ -488,22 +458,12 @@ def create_simpson():  # Write simpson input files
                 set delay4              [zero_ampl $delay4_length]
                 set delay4_short        [zero_ampl $delay4_short_length]
 
-                # puts "Delay 1: $delay1_length"
-                # puts "Delay 2: $delay2_length"
-                # puts "Delay 2 short: $delay2_short_length"
-                # puts "Delay 3: 0"
-                # puts "Delay 4: $delay4_length"
-                # puts "Delay 4 short: $delay4_short_length"
-
                 set par(seq_duration) [expr $delay1_length+$delay2_length+$delay4_length]
-                # puts "Sequence duration: $par(seq_duration)"
                 
                 set rfsh_combined [shape_add [list $rfsh1 $delay2_short $delay4]\
                                             [list $delay1 $rfsh2 $delay4_short]]
-                # puts "First Combined Shape: [expr [llength $rfsh_combined]*0.05]"
                 set rfsh_combined [list2shape [shape_add [list $rfsh_combined]\
                                                         [list $delay1 $delay2 $rfsh3]]]
-                # puts "Second Combined Shape: [expr [llength [shape2list $rfsh_combined]]*0.05]"
             }
 
             printwave [shape2list $rfsh_combined] _combined_$index
