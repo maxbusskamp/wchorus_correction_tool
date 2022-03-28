@@ -1180,7 +1180,7 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
         deadtime])
 
 
-    shapefile = np.genfromtxt(filename+'.shape_combined_0', delimiter=', ', comments='##')
+    shapefile = np.genfromtxt(filename+'.shape0', delimiter=', ', comments='##')
     rfmax = np.max(shapefile[:,0])
     simpson_infofile = open(filename + '.info', 'a')
     simpson_infofile.write('Maximum RF Power for complete shape: '+str(rfmax))
