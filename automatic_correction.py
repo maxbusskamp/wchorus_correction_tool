@@ -204,6 +204,8 @@ def create_simpson():  # Write simpson input files
             set par(sweep_rate1) [expr ($par(Delta1)*1e3)/($par(tw1)*1e-6)]
             set par(rf1) [format "%.2f" [expr $par(rf_factor1)*sqrt($par(sweep_rate1))]]
             set rfsh1 [pulsegen $par(shape_type) $par(tw1) $par(Delta1) $par(rf1) $par(var11) $par(var12) $par(ph1) $par(stepsize)]
+            # save_shape $rfsh1 verbose.shape1
+            printwave [shape2list $rfsh1] verbose1
 
             # Set second WURST pulse (refocussing)
             set par(sweep_rate2) [expr ($par(Delta2)*1e3)/($par(tw2)*1e-6)]
@@ -860,7 +862,7 @@ def create_simpson():  # Write simpson input files
             if {[string equal $options(-filename_phasecorrect) none] || [string equal $options(-filename_phasecorrect) 'none']} {
                 set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)]
             } else {
-                set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)+[lindex $phasecorr_list $j 0]]
+                set ph [expr $options(-offset)+$phi0*log($x)+$options(-phase)-[lindex $phasecorr_list $j 0]]
             }
             if {$options(-direction) == 1} {
                 set ph [expr fmod($ph,360)]
@@ -1180,11 +1182,12 @@ def simulate_sequence(exp_type, shape_type):  # Start simulation with set parame
         deadtime])
 
 
-    shapefile = np.genfromtxt(filename+'.shape0', delimiter=', ', comments='##')
-    rfmax = np.max(shapefile[:,0])
-    simpson_infofile = open(filename + '.info', 'a')
-    simpson_infofile.write('Maximum RF Power for complete shape: '+str(rfmax))
-    simpson_infofile.close()
+    if(exp_type == 'overlapCHORUS'):
+        shapefile = np.genfromtxt(filename+'.shape0', delimiter=', ', comments='##')
+        rfmax = np.max(shapefile[:,0])
+        simpson_infofile = open(filename + '.info', 'a')
+        simpson_infofile.write('Maximum RF Power for complete shape: '+str(rfmax))
+        simpson_infofile.close()
 
 
     if os.path.exists('phasecorrection_liquid.tcl'):
@@ -1583,9 +1586,9 @@ def read_parameter(exp_type, shape_type):  # Update the "output" text element to
         tau2         = '{:.1f}'.format(float(tw1)/2.0)
         tw2          = '{:.1f}'.format(float(tau2)+float(tw3))
         rffactor2    = rffactor3
-        rfpower1     = '{:.2f}'.format(float(rffactor1)*np.sqrt(float(delta1)*1e3/float(tw1)*1e-6))
-        rfpower2     = '{:.2f}'.format(float(rffactor2)*np.sqrt(float(delta2)*1e3/float(tw2)*1e-6))
-        rfpower3     = '{:.2f}'.format(float(rffactor3)*np.sqrt(float(delta3)*1e3/float(tw3)*1e-6))
+        rfpower1     = '{:.2f}'.format(float(rffactor1)*np.sqrt((float(delta1)*1e3)/(float(tw1)*1e-6)))
+        rfpower2     = '{:.2f}'.format(float(rffactor2)*np.sqrt((float(delta2)*1e3)/(float(tw2)*1e-6)))
+        rfpower3     = '{:.2f}'.format(float(rffactor3)*np.sqrt((float(delta3)*1e3)/(float(tw3)*1e-6)))
         if(shape_type == 'supergaussian'):
             var21           = var31
             var22           = simulation_values['var22']
