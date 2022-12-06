@@ -26,3 +26,18 @@ The WCHORUS Correction Tool can be started by running `python wchorus_correction
 
 Afterwards the type of pulse and experiment to simulate are chosen and the simulation parameters can be specified.
 The results of the simulations are shown and saved to shape files for SIMPSON and TopSpin. Logs files containing all simulation parameters and the produced figure are also saved. All files are encoded with a unique string, to allow the simulation of multiple parameters in quick succession.
+
+# License and Copyright Info
+
+The WCHORUS Correction Tool is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
